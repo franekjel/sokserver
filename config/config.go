@@ -8,8 +8,8 @@ import (
 type Config struct {
 	Port               uint16 `yaml:"port"`
 	Workers            uint16 `yaml:"workers"`
-	DefaultMemoryLimit uint32 `yaml:"default_memory_limit"`
-	DefaultTimeLimit   uint16 `yaml:"default_time_limit"`
+	DefaultMemoryLimit uint   `yaml:"default_memory_limit"`
+	DefaultTimeLimit   uint   `yaml:"default_time_limit"`
 	Info               string `yaml:"info"`
 }
 

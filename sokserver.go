@@ -1,12 +1,12 @@
 package main
 
 import (
+	flag "github.com/spf13/pflag"
 	"os"
 	"path/filepath"
 
 	. "github.com/franekjel/sokserver/logger"
 	"github.com/franekjel/sokserver/server"
-	flag "github.com/spf13/pflag"
 )
 
 func main() {
