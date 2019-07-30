@@ -4,12 +4,14 @@ import (
 	"github.com/franekjel/sokserver/config"
 	"github.com/franekjel/sokserver/fs"
 	. "github.com/franekjel/sokserver/logger"
+	"github.com/franekjel/sokserver/tasks"
 	"github.com/franekjel/sokserver/users"
 )
 
 //Server stores main SOK data
 type Server struct {
 	users map[string]*users.User
+	tasks map[string]*tasks.Task
 	conf  *config.Config
 	fs    *fs.Fs
 }
@@ -22,7 +24,7 @@ func (s *Server) loadConfig() {
 		Log(DEBUG, string(s.conf.GetConfig()))
 		defer s.fs.WriteFile("sok.yml", string(s.conf.GetConfig()))
 	} else {
-		buff = s.fs.ReadFile("sok.yml")
+		*buff = s.fs.ReadFile("sok.yml")
 		s.conf = config.MakeConfig(buff)
 	}
 	Log(INFO, "port: %d", s.conf.Port)
@@ -32,6 +34,7 @@ func (s *Server) loadConfig() {
 }
 
 func (s *Server) loadUsers() {
+	Log(INFO, "---Loading users data")
 	s.users = make(map[string]*users.User)
 	if !s.fs.FileExist("users") {
 		Log(WARN, "\"users\" directory doesn't exist, creating")
@@ -40,10 +43,23 @@ func (s *Server) loadUsers() {
 	}
 	//at this point we are sure that "users" exists
 	dir := fs.Init(s.fs.Path, "users")
-	userList := dir.ListDirs("")
-	for _, login := range userList {
+	for _, login := range dir.ListDirs("") {
 		Log(INFO, "Loading user %s", login)
 		s.users[login] = users.LoadUser(fs.Init(dir.Path, login))
+	}
+}
+
+func (s *Server) loadTasks() {
+	Log(INFO, "---Loading tasks")
+	s.tasks = make(map[string]*tasks.Task)
+	if !s.fs.FileExist("tasks") {
+		Log(WARN, "\"tasks\" directory doesn't exist, creating")
+		s.fs.CreateDirectory("tasks")
+		return
+	}
+	dir := fs.Init(s.fs.Path, "tasks")
+	for _, name := range dir.ListDirs("") {
+		s.tasks[name] = tasks.LoadTask(fs.Init(dir.Path, name), s.conf, &name)
 	}
 }
 
@@ -53,4 +69,5 @@ func InitServer(dir string) {
 	server.fs = fs.Init(dir, "")
 	server.loadConfig()
 	server.loadUsers()
+	server.loadTasks()
 }

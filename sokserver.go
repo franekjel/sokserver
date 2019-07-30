@@ -16,7 +16,7 @@ func main() {
 	flag.Parse()
 
 	InitLogger(*exit, *debug)
-	Log(INFO, "Initializing SOK")
+	Log(INFO, "---Initializing SOK")
 
 	if *sokPath == "sok localization" {
 		ex, err := os.Executable()

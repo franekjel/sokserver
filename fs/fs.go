@@ -32,12 +32,12 @@ func (fs *Fs) FileExist(file string) bool {
 }
 
 //ReadFile copy content of file to table. Doesn't check errors (throw fatal)
-func (fs *Fs) ReadFile(file string) *[]byte {
+func (fs *Fs) ReadFile(file string) []byte {
 	buff, err := ioutil.ReadFile(filepath.Join(fs.Path, file))
 	if err != nil {
 		Log(FATAL, "Cannot read file %s, %s", filepath.Join(fs.Path, file), err.Error())
 	}
-	return &buff
+	return buff
 }
 
 //WriteFile weites buff to file and return true on success

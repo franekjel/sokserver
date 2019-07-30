@@ -27,7 +27,7 @@ func (u *User) loadData() {
 		Log(FATAL, "User data missing! %s", u.fs.Path)
 	}
 	buff := u.fs.ReadFile("user.yml")
-	yaml.Unmarshal(*buff, u)
+	yaml.Unmarshal(buff, u)
 }
 
 func (u *User) saveData() {
