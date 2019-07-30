@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	sokPath := flag.StringP("path", "p", "sok localization", "specify the SOK data path")
+	sokPath := flag.StringP("path", "p", "sok executable folder", "specify the SOK data path")
 	debug := flag.BoolP("debug", "d", false, "enable debug output")
 	exit := flag.BoolP("exit-on-error", "e", false, "exit on error")
 	flag.Parse()
@@ -18,7 +18,7 @@ func main() {
 	InitLogger(*exit, *debug)
 	Log(INFO, "---Initializing SOK")
 
-	if *sokPath == "sok localization" {
+	if *sokPath == "sok executable folder" {
 		ex, err := os.Executable()
 		if err != nil {
 			Log(FATAL, "Cannot get SOK localization, %s", err.Error())
