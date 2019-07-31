@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/franekjel/sokserver/config"
+	"github.com/franekjel/sokserver/contests"
 	"github.com/franekjel/sokserver/fs"
 	. "github.com/franekjel/sokserver/logger"
 	"github.com/franekjel/sokserver/tasks"
@@ -10,10 +11,11 @@ import (
 
 //Server stores main SOK data
 type Server struct {
-	users map[string]*users.User
-	tasks map[string]*tasks.Task
-	conf  *config.Config
-	fs    *fs.Fs
+	users    map[string]*users.User
+	tasks    map[string]*tasks.Task
+	contests map[string]*contests.Contest
+	conf     *config.Config
+	fs       *fs.Fs
 }
 
 func (s *Server) loadConfig() {
@@ -63,6 +65,20 @@ func (s *Server) loadTasks() {
 	}
 }
 
+func (s *Server) loadContests() {
+	Log(INFO, "---Loading contests")
+	s.contests = make(map[string]*contests.Contest)
+	if !s.fs.FileExist("contests") {
+		Log(WARN, "\"contests\" directory doesn't exist, creating")
+		s.fs.CreateDirectory("contests")
+		return
+	}
+	dir := fs.Init(s.fs.Path, "contests")
+	for _, name := range dir.ListDirs("") {
+		s.contests[name] = contests.LoadContest(fs.Init(dir.Path, name))
+	}
+}
+
 //InitServer initializes structures and starts listening
 func InitServer(dir string) {
 	var server Server
@@ -70,4 +86,5 @@ func InitServer(dir string) {
 	server.loadConfig()
 	server.loadUsers()
 	server.loadTasks()
+	server.loadContests()
 }

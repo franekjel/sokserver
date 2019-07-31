@@ -10,13 +10,12 @@ import (
 
 //Round has tasks, start time, end time and time when results will be show
 type Round struct {
-	Name        string    `yaml:"name"`
-	Tasks       []string  `yaml:"tasks,flow"`
-	Start       time.Time `yaml:"start_date"`
-	End         time.Time `yaml:"end_date"`
-	ResultsShow time.Time `yaml:"results_show_date"`
-
-	fs *fs.Fs
+	Name        string
+	Tasks       []string
+	Start       time.Time
+	End         time.Time
+	ResultsShow time.Time
+	fs          *fs.Fs
 }
 
 //struct to parsing round.yml neccessary due to yaml date parsing issues
