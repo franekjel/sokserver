@@ -6,6 +6,7 @@ import (
 
 	"github.com/franekjel/sokserver/fs"
 	. "github.com/franekjel/sokserver/logger"
+	"github.com/franekjel/sokserver/tasks"
 )
 
 //Round has tasks, start time, end time and time when results will be show
@@ -27,7 +28,19 @@ type roundParse struct {
 	ResultsShow string   `yaml:"results_show_date"`
 }
 
-func (r *Round) loadData() {
+func (r *Round) verifyTasks(tasks map[string]*tasks.Task) {
+	newTasks := make([]string, 0, len(r.Tasks))
+	for _, task := range r.Tasks {
+		if _, ok := tasks[task]; ok {
+			newTasks = append(newTasks, task)
+		} else {
+			Log(ERR, "%s: missing task %s", r.fs.Path, task)
+		}
+	}
+	r.Tasks = newTasks
+}
+
+func (r *Round) loadData(tasks map[string]*tasks.Task) {
 	if !r.fs.FileExist("round.yml") {
 		Log(FATAL, "Round settings missing! %s", r.fs.Path)
 	}
@@ -53,14 +66,15 @@ func (r *Round) loadData() {
 		Log(WARN, "Wrong or missing result show date in %s, using star date instead (results will be show immediately)", r.fs.Path)
 		r.ResultsShow = r.Start
 	}
+	r.verifyTasks(tasks)
 }
 
 //LoadRound loads round in given folder
-func LoadRound(fs *fs.Fs) *Round {
+func LoadRound(fs *fs.Fs, tasks map[string]*tasks.Task) *Round {
 	Log(INFO, "Loading round %s", fs.Path)
 	round := new(Round)
 	round.fs = fs
-	round.loadData()
+	round.loadData(tasks)
 	Log(DEBUG, "%s %s %+q", round.Name, round.Start, round.Tasks)
 	return round
 }

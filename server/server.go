@@ -75,7 +75,7 @@ func (s *Server) loadContests() {
 	}
 	dir := fs.Init(s.fs.Path, "contests")
 	for _, name := range dir.ListDirs("") {
-		s.contests[name] = contests.LoadContest(fs.Init(dir.Path, name))
+		s.contests[name] = contests.LoadContest(fs.Init(dir.Path, name), s.tasks)
 	}
 }
 
