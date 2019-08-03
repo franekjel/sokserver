@@ -22,6 +22,11 @@ func Init(path string, dir string) *Fs {
 	return &fs
 }
 
+//Join is wrapper around filepath.join
+func Join(path string, dir string) string {
+	return filepath.Join(path, dir)
+}
+
 //FileExist check if file exist
 func (fs *Fs) FileExist(file string) bool {
 	_, err := os.Stat(filepath.Join(fs.Path, file))
