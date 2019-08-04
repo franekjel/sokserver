@@ -18,7 +18,14 @@ type Round struct {
 	End         time.Time
 	ResultsShow time.Time
 	fs          *fs.Fs
-	Ranking     map[string]map[string]uint
+	Ranking     RoundRanking
+}
+
+//RoundRanking hold ranking as a two-dimensional array and additional slice contains columns description (tasks names).
+//First columns is sum of row (labeled as "Sum")
+type RoundRanking struct {
+	Points [][]uint
+	Names  []string
 }
 
 //struct to parsing round.yml neccessary due to yaml date parsing issues
@@ -74,17 +81,30 @@ func (r *Round) loadData(tasks map[string]*tasks.Task) {
 //roundname/username/taskname holds last user submissions. This function get results from this submission
 func (r *Round) getResult(user, task string) uint {
 	submission := r.fs.ReadFile(fs.Join(user, task))
-	return submissions.LoadSubmission(submission).Points
+	return submissions.LoadSubmission(submission).Sum
 }
 
 func (r *Round) loadRanking() {
 	dirs := r.fs.ListDirs(".")
-	r.Ranking = make(map[string]map[string]uint, len(dirs))
-	for _, i := range dirs {
-		r.Ranking[i] = make(map[string]uint, len(r.Tasks))
-		for _, j := range r.Tasks {
-			r.Ranking[i][j] = r.getResult(i, j)
+	n := len(r.Tasks) + 1
+	r.Ranking = RoundRanking{
+		make([][]uint, 0, len(dirs)),
+		make([]string, n),
+	}
+
+	r.Ranking.Names[0] = "Sum"
+	for i := 1; i < n; i++ {
+		r.Ranking.Names[i] = r.Tasks[i]
+	}
+
+	for i, user := range dirs {
+		r.Ranking.Points = append(r.Ranking.Points, make([]uint, n))
+		var sum uint
+		for j, task := range r.Tasks {
+			r.Ranking.Points[i][j+1] = r.getResult(user, task)
+			sum += r.Ranking.Points[i][j+1]
 		}
+		r.Ranking.Points[i][0] = sum
 	}
 }
 
