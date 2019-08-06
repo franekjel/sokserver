@@ -87,4 +87,7 @@ func InitServer(dir string) {
 	server.loadUsers()
 	server.loadTasks()
 	server.loadContests()
+	ch := make(chan *[]byte)
+	go server.startListening(ch)
+	<-ch
 }
