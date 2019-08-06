@@ -11,10 +11,25 @@ import (
 
 //Contest holds rounds in contest and groups allowed to participate
 type Contest struct {
-	fs     *fs.Fs
-	rounds map[string]*rounds.Round
-	Name   string `yaml:"name"`
-	Key    string `yaml:"key"`
+	fs      *fs.Fs
+	rounds  map[string]*rounds.Round
+	ranking map[string]uint
+	Name    string `yaml:"name"`
+	Key     string `yaml:"key"`
+}
+
+func (c *Contest) loadRanking() {
+	c.ranking = make(map[string]uint)
+	for _, round := range c.rounds {
+		for i, score := range round.Ranking.Points {
+			_, ok := c.ranking[round.Ranking.Names[i]]
+			if ok {
+				c.ranking[round.Ranking.Names[i]] += score[0]
+			} else {
+				c.ranking[round.Ranking.Names[i]] = score[0]
+			}
+		}
+	}
 }
 
 func (c *Contest) loadRounds(tasks map[string]*tasks.Task) {
@@ -42,5 +57,6 @@ func LoadContest(fs *fs.Fs, tasks map[string]*tasks.Task) *Contest {
 	contest.fs = fs
 	contest.loadConfig()
 	contest.loadRounds(tasks)
+	contest.loadRanking()
 	return contest
 }

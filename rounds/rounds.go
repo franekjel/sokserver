@@ -94,7 +94,7 @@ func (r *Round) loadRanking() {
 
 	r.Ranking.Names[0] = "Sum"
 	for i := 1; i < n; i++ {
-		r.Ranking.Names[i] = r.Tasks[i]
+		r.Ranking.Names[i] = r.Tasks[i-1]
 	}
 
 	for i, user := range dirs {
