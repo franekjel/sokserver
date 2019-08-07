@@ -7,7 +7,7 @@ import (
 
 	"github.com/franekjel/sokserver/config"
 	"github.com/franekjel/sokserver/fs"
-	. "github.com/franekjel/sokserver/logger"
+	log "github.com/franekjel/sokserver/logger"
 )
 
 type test struct {
@@ -115,12 +115,12 @@ func (t *Task) addTests() {
 	}
 	for _, i := range inList {
 		if _, ok := out[i]; !ok {
-			Log(WARN, "Missing output for test %s", i)
+			log.Warn("Missing output for test %s", i)
 		} else {
 			reg := regexp.MustCompile(`^([a-z]*)(\d+)([a-z]*)$`)
 			s := reg.FindStringSubmatch(i)
 			if len(s) == 0 {
-				Log(WARN, "Bad test name %s, skipping", i)
+				log.Warn("Bad test name %s, skipping", i)
 				continue
 			}
 			if isInitialTest(s) {
@@ -145,7 +145,7 @@ func (t *Task) parseConfig(globalConfig *config.Config) {
 
 func (t *Task) setLimits(tests *map[string]testGroup) {
 	for _, i := range *tests {
-		Log(DEBUG, "Test group: %s:", i.name)
+		log.Debug("Test group: %s:", i.name)
 		for _, j := range i.tests {
 
 			j.memoryLimit = t.config.MemoryLimit
@@ -160,7 +160,7 @@ func (t *Task) setLimits(tests *map[string]testGroup) {
 					j.memoryLimit = limit
 				}
 			}
-			Log(DEBUG, "Test: %s, time: %d, memory %d", j.name, j.timeLimit, j.memoryLimit)
+			log.Debug("Test: %s, time: %d, memory %d", j.name, j.timeLimit, j.memoryLimit)
 		}
 	}
 
@@ -182,7 +182,7 @@ func LoadTask(fs *fs.Fs, conf *config.Config, name *string) *Task {
 		finalTests:         make(map[string]testGroup, 10),
 	}
 	t.parseConfig(conf)
-	Log(INFO, "Loading task %s: %s", t.fs.Path, t.config.Title)
+	log.Info("Loading task %s: %s", t.fs.Path, t.config.Title)
 	t.addTests()
 	t.setTestsLimits()
 	return t

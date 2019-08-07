@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	. "github.com/franekjel/sokserver/logger"
+	log "github.com/franekjel/sokserver/logger"
 	"github.com/franekjel/sokserver/server"
 )
 
@@ -15,18 +15,18 @@ func main() {
 	exit := flag.BoolP("exit-on-error", "e", false, "exit on error")
 	flag.Parse()
 
-	InitLogger(*exit, *debug)
-	Log(INFO, "---Initializing SOK")
+	log.InitLogger(*exit, *debug)
+	log.Info("---Initializing SOK")
 
 	if *sokPath == "sok executable folder" {
 		ex, err := os.Executable()
 		if err != nil {
-			Log(FATAL, "Cannot get SOK localization, %s", err.Error())
+			log.Fatal("Cannot get SOK localization, %s", err.Error())
 		}
 		*sokPath = filepath.Dir(ex)
 	}
 
-	Log(INFO, "SOK folder %s", *sokPath)
+	log.Info("SOK folder %s", *sokPath)
 
 	server.InitServer(*sokPath)
 }

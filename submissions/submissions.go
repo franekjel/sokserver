@@ -1,7 +1,7 @@
 package submissions
 
 import (
-	. "github.com/franekjel/sokserver/logger"
+	log "github.com/franekjel/sokserver/logger"
 	"gopkg.in/yaml.v2"
 )
 
@@ -21,7 +21,7 @@ func LoadSubmission(buff []byte) *Submission {
 	var s Submission
 	err := yaml.Unmarshal(buff, &s)
 	if err != nil {
-		Log(ERR, "Error parsing user submission: %s", buff)
+		log.Error("Error parsing user submission: %s", buff)
 		return nil
 	}
 	return &s

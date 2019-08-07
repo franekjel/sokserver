@@ -4,7 +4,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/franekjel/sokserver/fs"
-	. "github.com/franekjel/sokserver/logger"
+	log "github.com/franekjel/sokserver/logger"
 	"github.com/franekjel/sokserver/rounds"
 	"github.com/franekjel/sokserver/tasks"
 )
@@ -41,18 +41,18 @@ func (c *Contest) loadRounds(tasks map[string]*tasks.Task) {
 
 func (c *Contest) loadConfig() {
 	if !c.fs.FileExist("contest.yml") {
-		Log(FATAL, "Contest settings missing! %s", c.fs.Path)
+		log.Fatal("Contest settings missing! %s", c.fs.Path)
 	}
 	buff := c.fs.ReadFile("contest.yml")
 	err := yaml.Unmarshal(buff, c)
 	if err != nil {
-		Log(ERR, "%s", err.Error())
+		log.Error("%s", err.Error())
 	}
 }
 
 //LoadContest loads contest in given folder
 func LoadContest(fs *fs.Fs, tasks map[string]*tasks.Task) *Contest {
-	Log(INFO, "Loading contest %s", fs.Path)
+	log.Info("Loading contest %s", fs.Path)
 	contest := new(Contest)
 	contest.fs = fs
 	contest.loadConfig()

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/franekjel/sokserver/fs"
-	. "github.com/franekjel/sokserver/logger"
+	log "github.com/franekjel/sokserver/logger"
 	"github.com/franekjel/sokserver/submissions"
 	"github.com/franekjel/sokserver/tasks"
 )
@@ -43,7 +43,7 @@ func (r *Round) verifyTasks(tasks map[string]*tasks.Task) {
 		if _, ok := tasks[task]; ok {
 			newTasks = append(newTasks, task)
 		} else {
-			Log(ERR, "%s: missing task %s", r.fs.Path, task)
+			log.Error("%s: missing task %s", r.fs.Path, task)
 		}
 	}
 	r.Tasks = newTasks
@@ -51,28 +51,28 @@ func (r *Round) verifyTasks(tasks map[string]*tasks.Task) {
 
 func (r *Round) loadData(tasks map[string]*tasks.Task) {
 	if !r.fs.FileExist("round.yml") {
-		Log(FATAL, "Round settings missing! %s", r.fs.Path)
+		log.Fatal("Round settings missing! %s", r.fs.Path)
 	}
 	buff := r.fs.ReadFile("round.yml")
 	var temp = new(roundParse)
 	err := yaml.Unmarshal(buff, temp)
 	if err != nil {
-		Log(ERR, "%s", err.Error())
+		log.Error("%s", err.Error())
 	}
 	time.Now().Format("2006-01-02 15:04")
 	r.Name = temp.Name
 	r.Tasks = temp.Tasks //TODO: tasks existence check?
 	r.Start, err = time.Parse("2006-01-02 15:04", temp.Start)
 	if err != nil {
-		Log(FATAL, "Wrong start date in round config in %s: %s", r.fs.Path, err.Error())
+		log.Fatal("Wrong start date in round config in %s: %s", r.fs.Path, err.Error())
 	}
 	r.End, err = time.Parse("2006-01-02 15:04", temp.End)
 	if err != nil {
-		Log(FATAL, "Wrong end date in round config in %s: %s", r.fs.Path, err.Error())
+		log.Fatal("Wrong end date in round config in %s: %s", r.fs.Path, err.Error())
 	}
 	r.ResultsShow, err = time.Parse("2006-01-02 15:04", temp.ResultsShow)
 	if err != nil {
-		Log(WARN, "Wrong or missing result show date in %s, using star date instead (results will be show immediately)", r.fs.Path)
+		log.Warn("Wrong or missing result show date in %s, using start date instead (results will be show immediately)", r.fs.Path)
 		r.ResultsShow = r.Start
 	}
 	r.verifyTasks(tasks)
@@ -110,11 +110,11 @@ func (r *Round) loadRanking() {
 
 //LoadRound loads round in given folder
 func LoadRound(fs *fs.Fs, tasks map[string]*tasks.Task) *Round {
-	Log(INFO, "Loading round %s", fs.Path)
+	log.Info("Loading round %s", fs.Path)
 	round := new(Round)
 	round.fs = fs
 	round.loadData(tasks)
 	round.loadRanking()
-	Log(DEBUG, "%s %s %+q", round.Name, round.Start, round.Tasks)
+	log.Debug("%s %s %+q", round.Name, round.Start, round.Tasks)
 	return round
 }

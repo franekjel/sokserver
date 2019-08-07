@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/franekjel/sokserver/fs"
-	. "github.com/franekjel/sokserver/logger"
+	log "github.com/franekjel/sokserver/logger"
 )
 
 //User data
@@ -24,7 +24,7 @@ type User struct {
 
 func (u *User) loadData() {
 	if !u.fs.FileExist("user.yml") {
-		Log(FATAL, "User data missing! %s", u.fs.Path)
+		log.Fatal("User data missing! %s", u.fs.Path)
 	}
 	buff := u.fs.ReadFile("user.yml")
 	yaml.Unmarshal(buff, u)
@@ -77,7 +77,7 @@ func LoadUser(path *fs.Fs) *User {
 	user := new(User)
 	user.fs = path
 	user.loadData()
-	Log(DEBUG, "name: %s, surname: %s, groups: %+q", user.Name, user.Surname, user.Groups)
+	log.Debug("name: %s, surname: %s, groups: %+q", user.Name, user.Surname, user.Groups)
 	user.saveData()
 	return user
 }
@@ -96,7 +96,7 @@ func AddUser(usersPath *fs.Fs, login *string, password []byte) *User {
 	usersPath.CreateDirectory(*login)
 	user.fs = fs.Init(usersPath.Path, *login)
 	user.saveData()
-	Log(DEBUG, "Adding user: login: %s", *login)
+	log.Debug("Adding user: login: %s", *login)
 	user.saveData()
 	return user
 }

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	. "github.com/franekjel/sokserver/logger"
+	log "github.com/franekjel/sokserver/logger"
 )
 
 //Fs handles operations on files at given path. All Fs method paths all relative to this path
@@ -17,7 +17,7 @@ type Fs struct {
 func Init(path string, dir string) *Fs {
 	fs := Fs{filepath.Join(path, dir)}
 	if fi, err := os.Stat(fs.Path); err != nil || !fi.IsDir() {
-		Log(FATAL, "%s is inaccesible", fs)
+		log.Fatal("%s is inaccesible", fs)
 	}
 	return &fs
 }
@@ -40,7 +40,7 @@ func (fs *Fs) FileExist(file string) bool {
 func (fs *Fs) ReadFile(file string) []byte {
 	buff, err := ioutil.ReadFile(filepath.Join(fs.Path, file))
 	if err != nil {
-		Log(FATAL, "Cannot read file %s, %s", filepath.Join(fs.Path, file), err.Error())
+		log.Fatal("Cannot read file %s, %s", filepath.Join(fs.Path, file), err.Error())
 	}
 	return buff
 }
@@ -49,7 +49,7 @@ func (fs *Fs) ReadFile(file string) []byte {
 func (fs *Fs) WriteFile(name string, buff string) bool {
 	err := ioutil.WriteFile(filepath.Join(fs.Path, name), []byte(buff), 0644)
 	if err != nil {
-		Log(WARN, "Cannot write to file %s, %s", filepath.Join(fs.Path, name), err.Error())
+		log.Warn("Cannot write to file %s, %s", filepath.Join(fs.Path, name), err.Error())
 		return false
 	}
 	return true
@@ -60,7 +60,7 @@ func (fs *Fs) ListFiles(dir string) []string {
 	var s []string
 	files, err := ioutil.ReadDir(filepath.Join(fs.Path, dir))
 	if err != nil {
-		Log(FATAL, "Cannot list files in %s, %s", filepath.Join(fs.Path, dir), err.Error())
+		log.Fatal("Cannot list files in %s, %s", filepath.Join(fs.Path, dir), err.Error())
 	}
 	for _, file := range files {
 		if !file.IsDir() {
@@ -75,7 +75,7 @@ func (fs *Fs) ListDirs(dir string) []string {
 	var s []string
 	files, err := ioutil.ReadDir(filepath.Join(fs.Path, dir))
 	if err != nil {
-		Log(FATAL, "Cannot list dirs in %s, %s", filepath.Join(fs.Path, dir), err.Error())
+		log.Fatal("Cannot list dirs in %s, %s", filepath.Join(fs.Path, dir), err.Error())
 	}
 	for _, file := range files {
 		if file.IsDir() {
@@ -89,7 +89,7 @@ func (fs *Fs) ListDirs(dir string) []string {
 func (fs *Fs) CreateDirectory(name string) bool {
 	err := os.Mkdir(filepath.Join(fs.Path, name), 0755)
 	if err != nil {
-		Log(WARN, "Cannot create directory %s, %s", filepath.Join(fs.Path, name), err.Error())
+		log.Warn("Cannot create directory %s, %s", filepath.Join(fs.Path, name), err.Error())
 		return false
 	}
 	return true
