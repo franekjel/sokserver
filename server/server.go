@@ -5,7 +5,6 @@ import (
 
 	"github.com/franekjel/sokserver/config"
 	"github.com/franekjel/sokserver/contests"
-	"github.com/franekjel/sokserver/executor"
 	"github.com/franekjel/sokserver/fs"
 	"github.com/franekjel/sokserver/tasks"
 	"github.com/franekjel/sokserver/users"
@@ -94,7 +93,7 @@ func InitServer(dir string) {
 
 	for { //main loop - execute users commands
 		data := <-ch
-		response := executor.Execute(data.data)
+		response := server.Execute(data.data)
 		sendResponse(data.conn, response)
 	}
 }
