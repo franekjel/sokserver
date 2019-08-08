@@ -1,10 +1,12 @@
 package server
 
 import (
+	log "github.com/franekjel/sokserver/logger"
+
 	"github.com/franekjel/sokserver/config"
 	"github.com/franekjel/sokserver/contests"
+	"github.com/franekjel/sokserver/executor"
 	"github.com/franekjel/sokserver/fs"
-	log "github.com/franekjel/sokserver/logger"
 	"github.com/franekjel/sokserver/tasks"
 	"github.com/franekjel/sokserver/users"
 )
@@ -89,4 +91,10 @@ func InitServer(dir string) {
 	server.loadContests()
 	ch := make(chan *connectionData)
 	go server.startListening(ch)
+
+	for { //main loop - execute users commands
+		data := <-ch
+		response := executor.Execute(data.data)
+		sendResponse(data.conn, response)
+	}
 }

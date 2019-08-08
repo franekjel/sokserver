@@ -16,9 +16,9 @@ type connectionData struct {
 }
 
 //reads 4 bytes and convert it to uint
-func readUint(conn *net.Conn) uint {
+func readUint(conn net.Conn) uint {
 	buff := make([]byte, 4)
-	c := bufio.NewReader(*conn)
+	c := bufio.NewReader(conn)
 	for i := 0; i < 4; i++ {
 		b, err := c.ReadByte()
 		if err != nil {
@@ -30,11 +30,11 @@ func readUint(conn *net.Conn) uint {
 }
 
 //reads n bytes from conn
-func readNBytes(conn *net.Conn, n uint) []byte {
+func readNBytes(conn net.Conn, n uint) []byte {
 	buff := make([]byte, n)
 	var i uint
 	for i < n {
-		nbyte, err := (*conn).Read(buff[i:])
+		nbyte, err := conn.Read(buff[i:])
 		if err != nil {
 			return nil
 		}
@@ -44,25 +44,25 @@ func readNBytes(conn *net.Conn, n uint) []byte {
 }
 
 //send given uint
-func sendUint(conn *net.Conn, n uint32) {
+func sendUint(conn net.Conn, n uint32) {
 	buff := make([]byte, 4)
 	binary.BigEndian.PutUint32(buff, n)
 	var i int
 	for i < 4 {
-		n, err := (*conn).Write(buff)
+		n, err := conn.Write(buff)
 		i += n
 		if err != nil {
-			log.Error("Cannot send data to client %s. %s", (*conn).RemoteAddr().String(), err.Error())
+			log.Error("Cannot send data to client %s. %s", conn.RemoteAddr().String(), err.Error())
 			return
 		}
 	}
 }
 
 //send given uint
-func sendSlice(conn *net.Conn, buff []byte) {
+func sendSlice(conn net.Conn, buff []byte) {
 	var i = 0
 	for {
-		nbyte, err := (*conn).Write(buff[i:])
+		nbyte, err := conn.Write(buff[i:])
 		if err != nil {
 			return
 		}
@@ -73,13 +73,13 @@ func sendSlice(conn *net.Conn, buff []byte) {
 //reads data from client and send to chan
 func readMessage(conn net.Conn, ch chan *connectionData) {
 	conn.SetDeadline(time.Now().Add(3 * time.Second))
-	msgSize := readUint(&conn)
+	msgSize := readUint(conn)
 	if msgSize == 0 || msgSize > 128*1024 {
 		log.Error("Bad message size or other error from %s", conn.RemoteAddr().String())
 		conn.Close()
 		return
 	}
-	buff := readNBytes(&conn, msgSize)
+	buff := readNBytes(conn, msgSize)
 	if buff == nil {
 		log.Error("Cannot get data from %s", conn.RemoteAddr().String())
 		conn.Close()
@@ -108,4 +108,9 @@ func (s *Server) startListening(ch chan *connectionData) {
 		}
 		go readMessage(conn, ch)
 	}
+}
+
+func sendResponse(conn net.Conn, buff []byte) {
+	sendUint(conn, uint32(len(buff)))
+	sendSlice(conn, buff)
 }
