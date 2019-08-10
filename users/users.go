@@ -32,8 +32,10 @@ func (u *User) loadData() {
 
 func (u *User) saveData() {
 	buff, err := yaml.Marshal(u)
-	if err != nil {
+	if err == nil {
 		u.fs.WriteFile("user.yml", string(buff))
+	} else {
+		log.Error("Cannot save user config %s", u.fs.Path)
 	}
 }
 
@@ -95,7 +97,6 @@ func AddUser(usersPath *fs.Fs, login *string, password []byte) *User {
 
 	usersPath.CreateDirectory(*login)
 	user.fs = fs.Init(usersPath.Path, *login)
-	user.saveData()
 	log.Debug("Adding user: login: %s", *login)
 	user.saveData()
 	return user

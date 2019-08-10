@@ -69,7 +69,13 @@ func (s *Server) createAccount(com *Command) []byte {
 	if _, ok := s.users[com.Login]; ok {
 		return returnStatus("Cannot create account, there is already user with this login")
 	}
-	if ok, _ := regexp.Match(`^([a-z][A-Z][0-9])$`, []byte(com.Login)); !ok {
+	if len(com.Login) < 5 {
+		return returnStatus("Login too short. Should have at least 5 letters")
+	}
+	if len(com.Login) > 20 {
+		return returnStatus("Login too long.")
+	}
+	if ok, _ := regexp.Match(`^\w+$`, []byte(com.Login)); !ok {
 		return returnStatus("Login may contains only letters and numbers")
 	}
 	dir := fs.Fs{Path: fs.Join(s.fs.Path, "users")}
