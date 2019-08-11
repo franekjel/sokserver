@@ -4,8 +4,11 @@ import (
 	"github.com/franekjel/sokserver/fs"
 	"gopkg.in/yaml.v2"
 	"regexp"
+	"strconv"
+	"time"
 
 	log "github.com/franekjel/sokserver/logger"
+	"github.com/franekjel/sokserver/submissions"
 	"github.com/franekjel/sokserver/users"
 )
 
@@ -22,7 +25,7 @@ type Command struct {
 
 //ReturnMessage send to client after execute command
 type ReturnMessage struct {
-	Status string `yaml:status` //status may be "ok" or contains error
+	Status string `yaml:"status"` //status may be "ok" or contains error
 }
 
 //Execute given command. Return response to the client
@@ -31,18 +34,24 @@ func (s *Server) Execute(buff []byte) []byte {
 	err := yaml.Unmarshal(buff, com)
 	if err != nil {
 		log.Error("Error parsing command")
-		return []byte{}
+		return returnStatus("Error parsing request - bad or currupted struture")
 	}
 	if com.Command == "create_account" { //one case when we don't check password
 		return s.createAccount(&com)
 	}
 
 	if !s.verifyUser(&com) {
-		return []byte{}
+		return returnStatus("Bad login or password")
 	}
+
 	log.Info("User %s execute %s", com.Login, com.Command)
 
-	return []byte{}
+	switch com.Command {
+	case "submit":
+		return s.submit(&com)
+	}
+
+	return returnStatus("Bad command name")
 }
 
 func (s *Server) verifyUser(com *Command) bool {
@@ -84,5 +93,38 @@ func (s *Server) createAccount(com *Command) []byte {
 		return returnStatus("Error creating user (probably during hashing password)")
 	}
 	s.users[com.Login] = user
+	return returnStatus("ok")
+}
+
+func (s *Server) submit(com *Command) []byte {
+	if _, ok := s.contests[com.Contest]; ok {
+		return returnStatus("Contest doesn't exist")
+	}
+	if _, ok := s.contests[com.Contest].Rounds[com.Round]; ok {
+		return returnStatus("Round doesn't exist")
+	}
+	if !s.users[com.Login].CheckGroup(&com.Contest) {
+		return returnStatus("You can't send submissions to this contest")
+	}
+	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
+		return returnStatus("Round has not yet started")
+	}
+	if s.contests[com.Contest].Rounds[com.Round].End.Before(time.Now()) {
+		return returnStatus("Round has ended")
+	}
+	sub := submissions.Submission{
+		User:    com.Login,
+		Task:    com.Task,
+		Round:   com.Round,
+		Contest: com.Contest,
+		Code:    com.Data,
+	}
+	buff, err := yaml.Marshal(sub)
+	if err != nil {
+		return returnStatus("Unknown error in porsing submission")
+	}
+	queue := fs.Init(s.fs.Path, "queue")
+	queue.WriteFile(com.Login+"_"+strconv.FormatInt(time.Now().Unix(), 10), string(buff))
+
 	return returnStatus("ok")
 }

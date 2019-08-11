@@ -88,6 +88,10 @@ func InitServer(dir string) {
 	server.loadUsers()
 	server.loadTasks()
 	server.loadContests()
+	if !server.fs.FileExist("queue") {
+		log.Warn("\"contests\" directory doesn't exist, creating")
+		server.fs.CreateDirectory("queue")
+	}
 	ch := make(chan *connectionData)
 	go server.startListening(ch)
 

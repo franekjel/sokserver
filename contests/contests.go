@@ -12,30 +12,30 @@ import (
 //Contest holds rounds in contest and groups allowed to participate
 type Contest struct {
 	fs      *fs.Fs
-	rounds  map[string]*rounds.Round
-	ranking map[string]uint
-	Name    string `yaml:"name"`
-	Key     string `yaml:"key"`
+	Rounds  map[string]*rounds.Round `yaml:"-"`
+	Ranking map[string]uint          `yaml:"-"`
+	Name    string                   `yaml:"name"`
+	Key     string                   `yaml:"key"`
 }
 
 func (c *Contest) loadRanking() {
-	c.ranking = make(map[string]uint)
-	for _, round := range c.rounds {
+	c.Ranking = make(map[string]uint)
+	for _, round := range c.Rounds {
 		for i, score := range round.Ranking.Points {
-			_, ok := c.ranking[round.Ranking.Names[i]]
+			_, ok := c.Ranking[round.Ranking.Names[i]]
 			if ok {
-				c.ranking[round.Ranking.Names[i]] += score[0]
+				c.Ranking[round.Ranking.Names[i]] += score[0]
 			} else {
-				c.ranking[round.Ranking.Names[i]] = score[0]
+				c.Ranking[round.Ranking.Names[i]] = score[0]
 			}
 		}
 	}
 }
 
 func (c *Contest) loadRounds(tasks map[string]*tasks.Task) {
-	c.rounds = make(map[string]*rounds.Round)
+	c.Rounds = make(map[string]*rounds.Round)
 	for _, round := range c.fs.ListDirs("") {
-		c.rounds[round] = rounds.LoadRound(fs.Init(c.fs.Path, round), tasks)
+		c.Rounds[round] = rounds.LoadRound(fs.Init(c.fs.Path, round), tasks)
 	}
 }
 
