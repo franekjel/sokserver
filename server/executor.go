@@ -97,10 +97,10 @@ func (s *Server) createAccount(com *Command) []byte {
 }
 
 func (s *Server) submit(com *Command) []byte {
-	if _, ok := s.contests[com.Contest]; ok {
+	if _, ok := s.contests[com.Contest]; !ok {
 		return returnStatus("Contest doesn't exist")
 	}
-	if _, ok := s.contests[com.Contest].Rounds[com.Round]; ok {
+	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
 		return returnStatus("Round doesn't exist")
 	}
 	if !s.users[com.Login].CheckGroup(&com.Contest) {

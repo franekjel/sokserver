@@ -34,8 +34,18 @@ Commands:
     password: P@ssword
     command: create_account
     ```
+-submit: Submits solution. Requires contest, round, task and data. Data field contains code. Example:
+	```
+	login: franekjel
+	password: P@ssword
+	command: submit
+	contest: con1
+	round: round1
+	task: task1
+	data: '#include <stdio.h>\n int main(){printf("answer");}'
+	```
+
 Todo:
-- submit
 - contest_ranking
 - round_ranking
 - list_submissions
