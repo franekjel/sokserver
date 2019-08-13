@@ -103,7 +103,59 @@ func TestContestRanking(t *testing.T) {
 		Contest:  "con1",
 	}
 	buff := s.getContestRanking(&com)
-	if string(buff[0:11]) != "status: ok" {
+	if string(buff[0:10]) != "status: ok" {
+		t.Error(string(buff))
+	}
+}
+
+func TestRoundRanking(t *testing.T) {
+	var s Server
+	s.fs = fs.Init("/tmp", "")
+	s.users = make(map[string]*users.User)
+	s.users["testLogin"] = &users.User{ //adding user
+		Groups: []string{"con1"},
+	}
+	s.contests = make(map[string]*contests.Contest)
+	s.contests["con1"] = &contests.Contest{ //adding contest
+		Rounds: make(map[string]*rounds.Round),
+	}
+	s.contests["con1"].Rounds["round1"] = &rounds.Round{Name: "round1", Start: time.Now(), End: time.Now().Add(time.Minute)} //adding round
+	s.tasks = make(map[string]*tasks.Task)
+	s.tasks["task1"] = &tasks.Task{Name: "task1"}
+	s.tasks["task2"] = &tasks.Task{Name: "task2"}
+	s.tasks["task3"] = &tasks.Task{Name: "task3"}
+
+	r := s.contests["con1"].Rounds["round1"]
+	r.Tasks = []string{"task1", "task2", "task3"}
+	s.contests["con1"].Rounds["round1"].Ranking = rounds.RoundRanking{
+		Points: make([][]uint, 0, 3),
+		Names:  make([]string, 3),
+	}
+
+	res := map[string]uint{ //map to get results, key is concatenation of login and task name
+		"testLogintask1": 100,
+		"testLogintask3": 50,
+		"footask2":       60,
+		"bartask3":       20,
+	}
+
+	for i, user := range []string{"testLogin", "foo", "bar"} {
+		r.Ranking.Points = append(r.Ranking.Points, make([]uint, 3))
+		r.Ranking.Names[i] = user
+		for j, task := range r.Tasks {
+			r.Ranking.Points[i][j] = res[user+task]
+		}
+	}
+
+	com := Command{
+		Login:    "testLogin",
+		Password: "password",
+		Command:  "round_ranking",
+		Contest:  "con1",
+		Round:    "round1",
+	}
+	buff := s.getRoundRanking(&com)
+	if string(buff[0:10]) != "status: ok" {
 		t.Error(string(buff))
 	}
 }

@@ -44,7 +44,7 @@ Commands:
 	task: task1
 	data: '#include <stdio.h>\n int main(){printf("answer");}'
 	```
- - contest_ranking: Return ranking of specified contests. Reqires contest field. Return message contains additonal map field "contest_ranking":
+ - contest_ranking: Return the ranking of given contests. Requires contest field. Return message contains additonal map field "contest_ranking":
 	```
 	status: ok
 	contest_ranking:
@@ -52,10 +52,21 @@ Commands:
 		franekjel: 120
 		bar: 80
 	``` 
-
+ - round_ranking: Return the ranking of given round. Requires contest and round field. Return message contains additional fields: "tasks" - tasks names, "users" - user names and "round_ranking" - two dimensional array of points. Example:
+ 	```
+	status: ok
+        tasks:
+        - task1
+        - task2
+        - task3
+        users:
+        - franekjel
+        - foo
+        - bar
+        round_ranking: [[100, 0, 50], [0, 60, 0], [0, 0, 20]]
+ 	```
+ 	In this example user franekjel get 100 points for task1 and 50 for task3, user foo get 60 points for task2 and user bar 20 points for task3
 Todo:
-- contest_ranking
-- round_ranking
 - list_submissions
 - last_submission
 - get_submission

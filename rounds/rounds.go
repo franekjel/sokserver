@@ -86,25 +86,16 @@ func (r *Round) getResult(user, task string) uint {
 
 func (r *Round) loadRanking() {
 	dirs := r.fs.ListDirs(".")
-	n := len(r.Tasks) + 1
+	n := len(r.Tasks)
 	r.Ranking = RoundRanking{
-		make([][]uint, 0, len(dirs)),
-		make([]string, n),
+		Points: make([][]uint, 0, len(dirs)),
+		Names:  make([]string, n),
 	}
-
-	r.Ranking.Names[0] = "Sum"
-	for i := 1; i < n; i++ {
-		r.Ranking.Names[i] = r.Tasks[i-1]
-	}
-
 	for i, user := range dirs {
 		r.Ranking.Points = append(r.Ranking.Points, make([]uint, n))
-		var sum uint
 		for j, task := range r.Tasks {
-			r.Ranking.Points[i][j+1] = r.getResult(user, task)
-			sum += r.Ranking.Points[i][j+1]
+			r.Ranking.Points[i][j] = r.getResult(user, task)
 		}
-		r.Ranking.Points[i][0] = sum
 	}
 }
 

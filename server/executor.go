@@ -25,9 +25,11 @@ type Command struct {
 
 //ReturnMessage send to client after execute command
 type ReturnMessage struct {
-	Status         string          `yaml:"status"` //status may be "ok" or contains error
-	ContestRanking map[string]uint `yaml:"contest_ranking,omitempty"`
-	RoundRanking   map[string]uint `yaml:"round_ranking,omitempty"`
+	Status         string          `yaml:"status"`                       //status may be "ok" or contains error
+	ContestRanking map[string]uint `yaml:"contest_ranking,omitempty"`    //used in contest_ranking
+	Tasks          []string        `yaml:"tasks,omitempty"`              //used in round_ranking
+	Users          []string        `yaml:"users,omitempty"`              //used in round_ranking
+	RoundRanking   [][]uint        `yaml:"round_ranking,omitempty,flow"` //used in round_ranking
 }
 
 //Execute given command. Return response to the client
@@ -144,6 +146,29 @@ func (s *Server) getContestRanking(com *Command) []byte {
 		return returnStatus("Contest doesn't exist or you don't have permissions")
 	}
 	msg := ReturnMessage{Status: "ok", ContestRanking: s.contests[com.Contest].Ranking}
+	buff, _ := yaml.Marshal(msg)
+	return buff
+}
+
+func (s *Server) getRoundRanking(com *Command) []byte {
+	if !s.checkContest(com) {
+		return returnStatus("Contest doesn't exist or you don't have permissions")
+	}
+	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
+		return returnStatus("Round doesn't exist")
+	}
+	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
+		return returnStatus("Round has not yet started")
+	}
+	if s.contests[com.Contest].Rounds[com.Round].ResultsShow.After(time.Now()) {
+		return returnStatus("Results will be shown at" + s.contests[com.Contest].Rounds[com.Round].ResultsShow.Format("2006-01-02 15:04"))
+	}
+	msg := ReturnMessage{
+		Status:       "ok",
+		Users:        s.contests[com.Contest].Rounds[com.Round].Ranking.Names,
+		Tasks:        s.contests[com.Contest].Rounds[com.Round].Tasks,
+		RoundRanking: s.contests[com.Contest].Rounds[com.Round].Ranking.Points,
+	}
 	buff, _ := yaml.Marshal(msg)
 	return buff
 }
