@@ -94,6 +94,7 @@ func InitServer(dir string) {
 	}
 	ch := make(chan *connectionData)
 	go server.startListening(ch)
+	go server.CheckSubmissions(fs.Init(server.fs.Path, "queue"), ch)
 
 	for { //main loop - execute users commands
 		data := <-ch

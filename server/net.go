@@ -113,4 +113,5 @@ func (s *Server) startListening(ch chan *connectionData) {
 func sendResponse(conn net.Conn, buff []byte) {
 	sendUint(conn, uint32(len(buff)))
 	sendSlice(conn, buff)
+	conn.Close()
 }

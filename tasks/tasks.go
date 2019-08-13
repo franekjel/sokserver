@@ -33,12 +33,12 @@ type taskConfig struct {
 //Task - struct for holding task data and performing tests
 type Task struct {
 	Name               string
+	Config             taskConfig
+	InitialTests       map[string]testGroup
+	finalTests         map[string]testGroup
 	fs                 *fs.Fs
-	config             taskConfig
 	defaultMemoryLimit uint
 	defaultTimeLimit   uint
-	initialTests       map[string]testGroup
-	finalTests         map[string]testGroup
 }
 
 func (t *Task) listInputs() []string {
@@ -83,11 +83,11 @@ func isInitialTest(s []string) bool {
 }
 
 func (t *Task) insertInitalTest(te *test, groupName *string) {
-	group, ok := t.initialTests[*groupName]
+	group, ok := t.InitialTests[*groupName]
 	if ok {
 		group.tests[te.name] = *te
 	} else {
-		t.initialTests[*groupName] = testGroup{
+		t.InitialTests[*groupName] = testGroup{
 			name:  *groupName,
 			tests: map[string]test{te.name: *te},
 		}
@@ -133,14 +133,14 @@ func (t *Task) addTests() {
 }
 
 func (t *Task) parseConfig(globalConfig *config.Config) {
-	t.config.MemoryLimit = globalConfig.DefaultMemoryLimit
-	t.config.TimeLimit = globalConfig.DefaultTimeLimit
-	t.config.Title = t.Name
+	t.Config.MemoryLimit = globalConfig.DefaultMemoryLimit
+	t.Config.TimeLimit = globalConfig.DefaultTimeLimit
+	t.Config.Title = t.Name
 	if !t.fs.FileExist("config.yml") {
 		return
 	}
 	s := t.fs.ReadFile("config.yml")
-	yaml.Unmarshal(s, &t.config)
+	yaml.Unmarshal(s, &t.Config)
 }
 
 func (t *Task) setLimits(tests *map[string]testGroup) {
@@ -148,14 +148,14 @@ func (t *Task) setLimits(tests *map[string]testGroup) {
 		log.Debug("Test group: %s:", i.name)
 		for _, j := range i.tests {
 
-			j.memoryLimit = t.config.MemoryLimit
-			j.timeLimit = t.config.TimeLimit
-			if limit, ok := t.config.TimeLimits[j.name]; ok {
+			j.memoryLimit = t.Config.MemoryLimit
+			j.timeLimit = t.Config.TimeLimit
+			if limit, ok := t.Config.TimeLimits[j.name]; ok {
 				if limit < 100000 {
 					j.timeLimit = limit
 				}
 			}
-			if limit, ok := t.config.MemoryLimits[j.name]; ok {
+			if limit, ok := t.Config.MemoryLimits[j.name]; ok {
 				if limit < 1024*1024 {
 					j.memoryLimit = limit
 				}
@@ -167,7 +167,7 @@ func (t *Task) setLimits(tests *map[string]testGroup) {
 }
 
 func (t *Task) setTestsLimits() {
-	t.setLimits(&t.initialTests)
+	t.setLimits(&t.InitialTests)
 	t.setLimits(&t.finalTests)
 }
 
@@ -178,11 +178,11 @@ func LoadTask(fs *fs.Fs, conf *config.Config, name *string) *Task {
 		fs:                 fs,
 		defaultTimeLimit:   conf.DefaultTimeLimit,
 		defaultMemoryLimit: conf.DefaultMemoryLimit,
-		initialTests:       make(map[string]testGroup, 1),
+		InitialTests:       make(map[string]testGroup, 1),
 		finalTests:         make(map[string]testGroup, 10),
 	}
 	t.parseConfig(conf)
-	log.Info("Loading task %s: %s", t.fs.Path, t.config.Title)
+	log.Info("Loading task %s: %s", t.fs.Path, t.Config.Title)
 	t.addTests()
 	t.setTestsLimits()
 	return t

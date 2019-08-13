@@ -146,7 +146,6 @@ func TestRoundRanking(t *testing.T) {
 			r.Ranking.Points[i][j] = res[user+task]
 		}
 	}
-
 	com := Command{
 		Login:    "testLogin",
 		Password: "password",

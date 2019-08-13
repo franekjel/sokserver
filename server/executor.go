@@ -59,7 +59,6 @@ func (s *Server) Execute(buff []byte) []byte {
 }
 
 func (s *Server) verifyUser(com *Command) bool {
-
 	user, ok := s.users[com.Login]
 	if !ok {
 		log.Error("User %s doesn't exist", com.Login)
@@ -114,7 +113,6 @@ func (s *Server) submit(com *Command) []byte {
 	if !s.checkContest(com) {
 		return returnStatus("Contest doesn't exist or you don't have permissions")
 	}
-
 	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
 		return returnStatus("Round doesn't exist")
 	}
