@@ -17,7 +17,7 @@ type User struct {
 	Surname      string   `yaml:"surname"`
 	PasswordHash string   `yaml:"password"`
 	PasswordSalt string   `yaml:"salt"`
-	Groups       []string `yaml:"groups,flow"`
+	Groups       []string `yaml:"groups"`
 
 	fs *fs.Fs
 }
@@ -30,7 +30,8 @@ func (u *User) loadData() {
 	yaml.Unmarshal(buff, u)
 }
 
-func (u *User) saveData() {
+//SaveData save user config to file
+func (u *User) SaveData() {
 	buff, err := yaml.Marshal(u)
 	if err == nil {
 		u.fs.WriteFile("user.yml", string(buff))
@@ -40,8 +41,8 @@ func (u *User) saveData() {
 }
 
 //AddToGroup adds user to given group
-func (u *User) AddToGroup(group *string) {
-	u.Groups = append(u.Groups, *group)
+func (u *User) AddToGroup(group string) {
+	u.Groups = append(u.Groups, group)
 }
 
 func genHash(password []byte) (string, string) {
@@ -80,7 +81,6 @@ func LoadUser(path *fs.Fs) *User {
 	user.fs = path
 	user.loadData()
 	log.Debug("name: %s, surname: %s, groups: %+q", user.Name, user.Surname, user.Groups)
-	user.saveData()
 	return user
 }
 
@@ -98,6 +98,6 @@ func AddUser(usersPath *fs.Fs, login *string, password []byte) *User {
 	usersPath.CreateDirectory(*login)
 	user.fs = fs.Init(usersPath.Path, *login)
 	log.Debug("Adding user: login: %s", *login)
-	user.saveData()
+	user.SaveData()
 	return user
 }

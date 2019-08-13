@@ -26,6 +26,9 @@ func TestCreateAccountOK(t *testing.T) {
 	if string(buff) != "status: ok\n" {
 		t.Error(string(buff))
 	}
+	s.users["testLogin"].AddToGroup("aaa")
+	s.users["testLogin"].AddToGroup("bbb")
+	s.users["testLogin"].SaveData()
 }
 
 func TestCreateAccountDuplicated(t *testing.T) {
@@ -77,6 +80,30 @@ func TestSubmit(t *testing.T) {
 	}
 	buff := s.submit(&com)
 	if string(buff) != "status: ok\n" {
+		t.Error(string(buff))
+	}
+}
+
+func TestContestRanking(t *testing.T) {
+	var s Server
+	s.fs = fs.Init("/tmp", "")
+	s.users = make(map[string]*users.User)
+	s.users["testLogin"] = &users.User{ //adding user
+		Groups: []string{"con1"},
+	}
+	s.contests = make(map[string]*contests.Contest)
+	s.contests["con1"] = &contests.Contest{ //adding contest
+		Ranking: map[string]uint{"testLogin": 120, "foo": 200, "bar": 45},
+	}
+
+	com := Command{
+		Login:    "testLogin",
+		Password: "password",
+		Command:  "contest_ranking",
+		Contest:  "con1",
+	}
+	buff := s.getContestRanking(&com)
+	if string(buff[0:11]) != "status: ok" {
 		t.Error(string(buff))
 	}
 }

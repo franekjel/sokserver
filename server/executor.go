@@ -25,7 +25,9 @@ type Command struct {
 
 //ReturnMessage send to client after execute command
 type ReturnMessage struct {
-	Status string `yaml:"status"` //status may be "ok" or contains error
+	Status         string          `yaml:"status"` //status may be "ok" or contains error
+	ContestRanking map[string]uint `yaml:"contest_ranking,omitempty"`
+	RoundRanking   map[string]uint `yaml:"round_ranking,omitempty"`
 }
 
 //Execute given command. Return response to the client
@@ -69,8 +71,18 @@ func (s *Server) verifyUser(com *Command) bool {
 	return true
 }
 
+func (s *Server) checkContest(com *Command) bool { //check if contest exists and user has acces to it
+	if _, ok := s.contests[com.Contest]; !ok {
+		return false
+	}
+	if !s.users[com.Login].CheckGroup(&com.Contest) {
+		return false
+	}
+	return true
+}
+
 func returnStatus(msg string) []byte {
-	buff, _ := yaml.Marshal(ReturnMessage{msg})
+	buff, _ := yaml.Marshal(ReturnMessage{Status: msg})
 	return buff
 }
 
@@ -97,14 +109,12 @@ func (s *Server) createAccount(com *Command) []byte {
 }
 
 func (s *Server) submit(com *Command) []byte {
-	if _, ok := s.contests[com.Contest]; !ok {
-		return returnStatus("Contest doesn't exist")
+	if !s.checkContest(com) {
+		return returnStatus("Contest doesn't exist or you don't have permissions")
 	}
+
 	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
 		return returnStatus("Round doesn't exist")
-	}
-	if !s.users[com.Login].CheckGroup(&com.Contest) {
-		return returnStatus("You can't send submissions to this contest")
 	}
 	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
 		return returnStatus("Round has not yet started")
@@ -127,4 +137,13 @@ func (s *Server) submit(com *Command) []byte {
 	queue.WriteFile(com.Login+"_"+strconv.FormatInt(time.Now().Unix(), 10), string(buff))
 
 	return returnStatus("ok")
+}
+
+func (s *Server) getContestRanking(com *Command) []byte {
+	if !s.checkContest(com) {
+		return returnStatus("Contest doesn't exist or you don't have permissions")
+	}
+	msg := ReturnMessage{Status: "ok", ContestRanking: s.contests[com.Contest].Ranking}
+	buff, _ := yaml.Marshal(msg)
+	return buff
 }

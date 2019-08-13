@@ -34,7 +34,7 @@ Commands:
     password: P@ssword
     command: create_account
     ```
--submit: Submits solution. Requires contest, round, task and data. Data field contains code. Example:
+ - submit: Submits solution. Requires contest, round, task and data. Data field contains code. Example:
 	```
 	login: franekjel
 	password: P@ssword
@@ -44,6 +44,14 @@ Commands:
 	task: task1
 	data: '#include <stdio.h>\n int main(){printf("answer");}'
 	```
+ - contest_ranking: Return ranking of specified contests. Reqires contest field. Return message contains additonal map field "contest_ranking":
+	```
+	status: ok
+	contest_ranking:
+		foo: 45
+		franekjel: 120
+		bar: 80
+	``` 
 
 Todo:
 - contest_ranking
