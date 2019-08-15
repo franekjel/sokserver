@@ -7,8 +7,8 @@ This file described protocol used by Sok to communicate with clients. Sok listen
 - Client send command - yaml formatted string, max 128KB
 - Server execute command and send response, then close connection
 
-Command fields
------
+### Command fields
+
 - login: user login. In case user isn't registered and command is create_accout this is desired user login. This field must be present. Example:
 "login: franekjel"
 - password: user password. If user isn't registered yet and command is create_accout this is new user password upon succesful registration. This field must be present. Example:
@@ -22,8 +22,8 @@ Command fields
 - task: task ID, necessary for some command. Example:
 "task: task1"
 
-Return message status
----
+### Return message status
+
 Return message always contains fields "status" if command was succesful
 Status is "ok" if command was executed successful. Otherwise it contains error message
 

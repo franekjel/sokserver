@@ -35,7 +35,7 @@ type Task struct {
 	Name               string
 	Config             taskConfig
 	InitialTests       map[string]testGroup
-	finalTests         map[string]testGroup
+	FinalTests         map[string]testGroup
 	fs                 *fs.Fs
 	defaultMemoryLimit uint
 	defaultTimeLimit   uint
@@ -95,11 +95,11 @@ func (t *Task) insertInitalTest(te *test, groupName *string) {
 }
 
 func (t *Task) insertFinalTest(te *test, groupName *string) {
-	group, ok := t.finalTests[*groupName]
+	group, ok := t.FinalTests[*groupName]
 	if ok {
 		group.tests[te.name] = *te
 	} else {
-		t.finalTests[*groupName] = testGroup{
+		t.FinalTests[*groupName] = testGroup{
 			name:  *groupName,
 			tests: map[string]test{te.name: *te},
 		}
@@ -168,7 +168,7 @@ func (t *Task) setLimits(tests *map[string]testGroup) {
 
 func (t *Task) setTestsLimits() {
 	t.setLimits(&t.InitialTests)
-	t.setLimits(&t.finalTests)
+	t.setLimits(&t.FinalTests)
 }
 
 //LoadTask loads task data
@@ -179,7 +179,7 @@ func LoadTask(fs *fs.Fs, conf *config.Config, name *string) *Task {
 		defaultTimeLimit:   conf.DefaultTimeLimit,
 		defaultMemoryLimit: conf.DefaultMemoryLimit,
 		InitialTests:       make(map[string]testGroup, 1),
-		finalTests:         make(map[string]testGroup, 10),
+		FinalTests:         make(map[string]testGroup, 10),
 	}
 	t.parseConfig(conf)
 	log.Info("Loading task %s: %s", t.fs.Path, t.Config.Title)

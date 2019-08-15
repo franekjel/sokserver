@@ -134,7 +134,7 @@ func (s *Server) submit(com *Command) []byte {
 		return returnStatus("Unknown error in porsing submission")
 	}
 	queue := fs.Init(s.fs.Path, "queue")
-	queue.WriteFile(com.Login+"_"+strconv.FormatInt(time.Now().Unix(), 10), string(buff))
+	queue.WriteFile(strconv.FormatInt(time.Now().UnixNano(), 16)+"_"+com.Login, string(buff))
 
 	return returnStatus("ok")
 }
