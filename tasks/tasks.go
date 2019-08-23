@@ -36,6 +36,7 @@ type Task struct {
 	Config             taskConfig
 	InitialTests       map[string]testGroup
 	FinalTests         map[string]testGroup
+	Statement          []byte
 	fs                 *fs.Fs
 	defaultMemoryLimit uint
 	defaultTimeLimit   uint
@@ -169,6 +170,33 @@ func (t *Task) setLimits(tests *map[string]testGroup) {
 func (t *Task) setTestsLimits() {
 	t.setLimits(&t.InitialTests)
 	t.setLimits(&t.FinalTests)
+}
+
+func (t *Task) addStatement() {
+	if !t.fs.FileExist("doc") {
+		log.Error("Task %s doesn't have doc folder!", t.Name)
+		return
+	}
+	doc := fs.Init(t.fs.Path, "doc")
+	docs := doc.ListFiles("")
+	if len(docs) == 0 {
+		log.Error("Task %s doesn't have problem statement!", t.Name)
+	}
+	for _, file := range docs { //we prefer problem statement as text
+		if file == t.Name+"zad.txt" {
+			t.Statement = doc.ReadFile(file)
+			return
+		}
+	}
+	for _, file := range docs { //or pdf
+		if file == t.Name+"zad.pdf" {
+			t.Statement = doc.ReadFile(file)
+			return
+		}
+	}
+	//if problem statement is not in txt or pdf, we get first file
+	t.Statement = doc.ReadFile(docs[0])
+	return
 }
 
 //LoadTask loads task data
