@@ -30,6 +30,8 @@ type ReturnMessage struct {
 	Tasks          []string        `yaml:"tasks,omitempty"`              //used in round_ranking
 	Users          []string        `yaml:"users,omitempty"`              //used in round_ranking
 	RoundRanking   [][]uint        `yaml:"round_ranking,omitempty,flow"` //used in round_ranking
+	Filename       string          `yaml:filename,omitempty`             //used in get_task
+	Data           string          `yaml:data,omitempty`                 //used in get_task, encoded in base64
 }
 
 //Execute given command. Return response to the client
@@ -122,6 +124,16 @@ func (s *Server) submit(com *Command) []byte {
 	if s.contests[com.Contest].Rounds[com.Round].End.Before(time.Now()) {
 		return returnStatus("Round has ended")
 	}
+	flag := false
+	for _, t := range s.contests[com.Contest].Rounds[com.Round].Tasks {
+		if t == com.Task {
+			flag = true
+			break
+		}
+	}
+	if !flag {
+		return returnStatus("Bad task or round")
+	}
 	sub := submissions.Submission{
 		User:    com.Login,
 		Task:    com.Task,
@@ -131,12 +143,39 @@ func (s *Server) submit(com *Command) []byte {
 	}
 	buff, err := yaml.Marshal(sub)
 	if err != nil {
-		return returnStatus("Unknown error in porsing submission")
+		return returnStatus("Unknown error in parsing submission")
 	}
 	queue := fs.Init(s.fs.Path, "queue")
 	queue.WriteFile(strconv.FormatInt(time.Now().UnixNano(), 16)+"_"+com.Login, string(buff))
 
 	return returnStatus("ok")
+}
+
+func (s *Server) getTask(com *Command) []byte {
+	if !s.checkContest(com) {
+		return returnStatus("Contest doesn't exist or you don't have permissions")
+	}
+	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
+		return returnStatus("Round doesn't exist")
+	}
+	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
+		return returnStatus("Round has not yet started")
+	}
+	flag := false
+	var t string
+	for _, t = range s.contests[com.Contest].Rounds[com.Round].Tasks {
+		if t == com.Task {
+			flag = true
+			break
+		}
+	}
+	if !flag {
+		return returnStatus("Bad task or round")
+	}
+	task := s.tasks[t]
+	msg := ReturnMessage{Status: "ok", Filename: task.StatementFileName, Data: task.Statement}
+	buff, _ := yaml.Marshal(msg)
+	return buff
 }
 
 func (s *Server) getContestRanking(com *Command) []byte {

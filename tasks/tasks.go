@@ -1,6 +1,7 @@
 package tasks
 
 import (
+	"encoding/base64"
 	"gopkg.in/yaml.v2"
 	"regexp"
 	"strings"
@@ -36,10 +37,11 @@ type Task struct {
 	Config             taskConfig
 	InitialTests       map[string]testGroup
 	FinalTests         map[string]testGroup
-	Statement          []byte
 	fs                 *fs.Fs
 	defaultMemoryLimit uint
 	defaultTimeLimit   uint
+	Statement          string
+	StatementFileName  string
 }
 
 func (t *Task) listInputs() []string {
@@ -182,20 +184,24 @@ func (t *Task) addStatement() {
 	if len(docs) == 0 {
 		log.Error("Task %s doesn't have problem statement!", t.Name)
 	}
+	var buff []byte
 	for _, file := range docs { //we prefer problem statement as text
 		if file == t.Name+"zad.txt" {
-			t.Statement = doc.ReadFile(file)
+			buff = doc.ReadFile(file)
 			return
 		}
 	}
 	for _, file := range docs { //or pdf
 		if file == t.Name+"zad.pdf" {
-			t.Statement = doc.ReadFile(file)
+			buff = doc.ReadFile(file)
 			return
 		}
 	}
 	//if problem statement is not in txt or pdf, we get first file
-	t.Statement = doc.ReadFile(docs[0])
+	buff = doc.ReadFile(docs[0])
+	//since this may be pdf or whatever it is enconded in base64
+	t.Statement = base64.StdEncoding.EncodeToString(buff)
+	t.StatementFileName = docs[0]
 	return
 }
 

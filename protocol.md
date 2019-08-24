@@ -34,6 +34,12 @@ Commands:
     password: P@ssword
     command: create_account
     ```
+ - get_task: Get problem statement for given task. Requires contest round and task field. Return message has fields filename and data which contains name of file and file content encoded in base64. Example of return message:
+ 	```
+	status: ok
+	filename: taskzad.txt
+	data: UHJvYmxlbSBzdGF0ZW1lbnQgZm9yIHRhc2s=
+ 	```
  - submit: Submits solution. Requires contest, round, task and data. Data field contains code. Example:
 	```
 	login: franekjel
