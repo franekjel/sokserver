@@ -1,6 +1,7 @@
 package server
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -51,20 +52,8 @@ func TestCreateAccountDuplicated(t *testing.T) {
 
 func TestSubmit(t *testing.T) {
 	//create virtual sok instance in /tmp and call submit command
-	var s Server
-	s.fs = fs.Init("/tmp", "")
-	s.fs.CreateDirectory("queue")
-	s.users = make(map[string]*users.User)
-	s.users["testLogin"] = &users.User{ //adding user
-		Groups: []string{"con1"},
-	}
-	s.contests = make(map[string]*contests.Contest)
-	s.contests["con1"] = &contests.Contest{ //adding contest
-		Rounds: make(map[string]*rounds.Round),
-	}
-	s.contests["con1"].Rounds["round1"] = &rounds.Round{Name: "round1", Start: time.Now(), End: time.Now().Add(time.Minute)} //adding round
-	s.tasks = make(map[string]*tasks.Task)
-	s.tasks["task1"] = &tasks.Task{Name: "task1"} //adding task
+	s:=prepareTestEnvironment()
+	defer s.cleanTestEnvironment()
 
 	com := Command{
 		Login:    "testLogin",
@@ -108,9 +97,10 @@ func TestContestRanking(t *testing.T) {
 	}
 }
 
-func TestRoundRanking(t *testing.T) {
+func prepareTestEnvironment() *Server {
 	var s Server
 	s.fs = fs.Init("/tmp", "")
+	s.fs.CreateDirectory("queue")
 	s.users = make(map[string]*users.User)
 	s.users["testLogin"] = &users.User{ //adding user
 		Groups: []string{"con1"},
@@ -146,6 +136,18 @@ func TestRoundRanking(t *testing.T) {
 			r.Ranking.Points[i][j] = res[user+task]
 		}
 	}
+	return &s
+}
+
+func (s *Server) cleanTestEnvironment() {
+	p := s.fs.Path
+	os.RemoveAll(p + "/queue")
+	os.RemoveAll(p + "/users")
+}
+
+func TestRoundRanking(t *testing.T) {
+	s := prepareTestEnvironment()
+	defer s.cleanTestEnvironment()
 	com := Command{
 		Login:    "testLogin",
 		Password: "password",

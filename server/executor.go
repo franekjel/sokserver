@@ -30,8 +30,8 @@ type ReturnMessage struct {
 	Tasks          []string        `yaml:"tasks,omitempty"`              //used in round_ranking
 	Users          []string        `yaml:"users,omitempty"`              //used in round_ranking
 	RoundRanking   [][]uint        `yaml:"round_ranking,omitempty,flow"` //used in round_ranking
-	Filename       string          `yaml:filename,omitempty`             //used in get_task
-	Data           string          `yaml:data,omitempty`                 //used in get_task, encoded in base64
+	Filename       string          `yaml:"filename,omitempty"`           //used in get_task
+	Data           string          `yaml:"data,omitempty"`               //used in get_task, encoded in base64
 }
 
 //Execute given command. Return response to the client
@@ -55,6 +55,12 @@ func (s *Server) Execute(buff []byte) []byte {
 	switch com.Command {
 	case "submit":
 		return s.submit(&com)
+	case "get_task":
+		return s.getTask(&com)
+	case "contest_ranking":
+		return s.getContestRanking(&com)
+	case "round_ranking":
+		return s.getRoundRanking(&com)
 	}
 
 	return returnStatus("Bad command name")
