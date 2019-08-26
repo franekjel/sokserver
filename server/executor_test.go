@@ -51,8 +51,7 @@ func TestCreateAccountDuplicated(t *testing.T) {
 }
 
 func TestSubmit(t *testing.T) {
-	//create virtual sok instance in /tmp and call submit command
-	s:=prepareTestEnvironment()
+	s := prepareTestEnvironment()
 	defer s.cleanTestEnvironment()
 
 	com := Command{
@@ -61,7 +60,7 @@ func TestSubmit(t *testing.T) {
 		Command:  "submit",
 		Contest:  "con1",
 		Round:    "round1",
-		Task:     "task1",
+		Task:     "taska",
 		Data: `include<stdio.h>
 		int main(){
 			printf("answer");
@@ -74,16 +73,8 @@ func TestSubmit(t *testing.T) {
 }
 
 func TestContestRanking(t *testing.T) {
-	var s Server
-	s.fs = fs.Init("/tmp", "")
-	s.users = make(map[string]*users.User)
-	s.users["testLogin"] = &users.User{ //adding user
-		Groups: []string{"con1"},
-	}
-	s.contests = make(map[string]*contests.Contest)
-	s.contests["con1"] = &contests.Contest{ //adding contest
-		Ranking: map[string]uint{"testLogin": 120, "foo": 200, "bar": 45},
-	}
+	s := prepareTestEnvironment()
+	defer s.cleanTestEnvironment()
 
 	com := Command{
 		Login:    "testLogin",
@@ -107,26 +98,27 @@ func prepareTestEnvironment() *Server {
 	}
 	s.contests = make(map[string]*contests.Contest)
 	s.contests["con1"] = &contests.Contest{ //adding contest
-		Rounds: make(map[string]*rounds.Round),
+		Rounds:  make(map[string]*rounds.Round),
+		Ranking: map[string]uint{"testLogin": 120, "foo": 200, "bar": 45},
 	}
 	s.contests["con1"].Rounds["round1"] = &rounds.Round{Name: "round1", Start: time.Now(), End: time.Now().Add(time.Minute)} //adding round
 	s.tasks = make(map[string]*tasks.Task)
-	s.tasks["task1"] = &tasks.Task{Name: "task1"}
-	s.tasks["task2"] = &tasks.Task{Name: "task2"}
-	s.tasks["task3"] = &tasks.Task{Name: "task3"}
+	s.tasks["taska"] = &tasks.Task{Name: "taska", Statement: "Task Statement", StatementFileName: "task.txt"} //Statement normally is store in base64
+	s.tasks["taskb"] = &tasks.Task{Name: "taskb"}
+	s.tasks["taskc"] = &tasks.Task{Name: "taskc"}
 
 	r := s.contests["con1"].Rounds["round1"]
-	r.Tasks = []string{"task1", "task2", "task3"}
+	r.Tasks = []string{"taska", "taskb", "taskc"}
 	s.contests["con1"].Rounds["round1"].Ranking = rounds.RoundRanking{
 		Points: make([][]uint, 0, 3),
 		Names:  make([]string, 3),
 	}
 
 	res := map[string]uint{ //map to get results, key is concatenation of login and task name
-		"testLogintask1": 100,
-		"testLogintask3": 50,
-		"footask2":       60,
-		"bartask3":       20,
+		"testLogintaska": 100,
+		"testLogintaskc": 50,
+		"footaskb":       60,
+		"bartaskc":       20,
 	}
 
 	for i, user := range []string{"testLogin", "foo", "bar"} {
@@ -156,6 +148,23 @@ func TestRoundRanking(t *testing.T) {
 		Round:    "round1",
 	}
 	buff := s.getRoundRanking(&com)
+	if string(buff[0:10]) != "status: ok" {
+		t.Error(string(buff))
+	}
+}
+
+func TestGetTask(t *testing.T) {
+	s := prepareTestEnvironment()
+	defer s.cleanTestEnvironment()
+	com := Command{
+		Login:    "testLogin",
+		Password: "password",
+		Command:  "get_task",
+		Contest:  "con1",
+		Round:    "round1",
+		Task:     "taska",
+	}
+	buff := s.getTask(&com)
 	if string(buff[0:10]) != "status: ok" {
 		t.Error(string(buff))
 	}

@@ -22,7 +22,7 @@ This folder contains users folders.
 This folder contains user data and submissions. TODO
 
 ### Tasks folder ($SOK/tasks)
-This folder contains tasks. Sok use task format similar to sio2 (oioioi). Each task folder constains:
+This folder contains tasks. Sok use task format similar to sio2 (oioioi). Each task name should contains only letters. Each folder contains:
 	- config.yml - task configuration. If missed defaults values will be used. Fields:
 		- title (string) - task full title
 		- memory_limit (uint) - task global memory limit in KB. If not present default_memory_limit value is used
@@ -34,7 +34,7 @@ This folder contains tasks. Sok use task format similar to sio2 (oioioi). Each t
 	- doc - doc folder contains problem statement named ${TASK}zad.(pdf|html|txt|whatever)
 	- prog (optional) - folder contains task solutions 
 ### Contests folder ($SOK/contests)
-This folder contains contests folder.
+This folder contains contests folder. Each contest name should contains only letters
 
 ### Contest folder ($SOK/contests/$CONTEST_NAME)
 This folder contains contest configuration file (contests.yml) and rounds folders.
