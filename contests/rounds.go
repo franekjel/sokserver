@@ -36,6 +36,22 @@ type roundParse struct {
 	ResultsShow string   `yaml:"results_show_date"`
 }
 
+func (r *Round) listSubmissions(login string, task string) []*tasks.Submission {
+	if !r.fs.FileExist(fs.Join(login, task)) {
+		return []*tasks.Submission{}
+	}
+	dir := fs.Init(r.fs.Path, fs.Join(login, task))
+	subs := dir.ListFiles("")
+	re := make([]*tasks.Submission, 0, len(subs))
+	for _, file := range subs {
+		sub := tasks.LoadSubmission(dir.ReadFile(file))
+		if sub != nil {
+			re = append(re, sub)
+		}
+	}
+	return re
+}
+
 func (r *Round) verifyTasks(tasks map[string]*tasks.Task) {
 	newTasks := make([]string, 0, len(r.Tasks))
 	for _, task := range r.Tasks {

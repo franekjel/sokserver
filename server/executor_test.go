@@ -7,7 +7,6 @@ import (
 
 	"github.com/franekjel/sokserver/contests"
 	"github.com/franekjel/sokserver/fs"
-	"github.com/franekjel/sokserver/rounds"
 	"github.com/franekjel/sokserver/tasks"
 	"github.com/franekjel/sokserver/users"
 )
@@ -98,10 +97,10 @@ func prepareTestEnvironment() *Server {
 	}
 	s.contests = make(map[string]*contests.Contest)
 	s.contests["con1"] = &contests.Contest{ //adding contest
-		Rounds:  make(map[string]*rounds.Round),
+		Rounds:  make(map[string]*contests.Round),
 		Ranking: map[string]uint{"testLogin": 120, "foo": 200, "bar": 45},
 	}
-	s.contests["con1"].Rounds["round1"] = &rounds.Round{Name: "round1", Start: time.Now(), End: time.Now().Add(time.Minute)} //adding round
+	s.contests["con1"].Rounds["round1"] = &contests.Round{Name: "round1", Start: time.Now(), End: time.Now().Add(time.Minute)} //adding round
 	s.tasks = make(map[string]*tasks.Task)
 	s.tasks["taska"] = &tasks.Task{Name: "taska", Statement: "Task Statement", StatementFileName: "task.txt"} //Statement normally is store in base64
 	s.tasks["taskb"] = &tasks.Task{Name: "taskb"}
@@ -109,7 +108,7 @@ func prepareTestEnvironment() *Server {
 
 	r := s.contests["con1"].Rounds["round1"]
 	r.Tasks = []string{"taska", "taskb", "taskc"}
-	s.contests["con1"].Rounds["round1"].Ranking = rounds.RoundRanking{
+	s.contests["con1"].Rounds["round1"].Ranking = contests.RoundRanking{
 		Points: make([][]uint, 0, 3),
 		Names:  make([]string, 3),
 	}
