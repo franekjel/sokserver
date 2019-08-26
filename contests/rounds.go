@@ -1,4 +1,4 @@
-package rounds
+package contests
 
 import (
 	"gopkg.in/yaml.v2"

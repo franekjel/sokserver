@@ -5,17 +5,16 @@ import (
 
 	"github.com/franekjel/sokserver/fs"
 	log "github.com/franekjel/sokserver/logger"
-	"github.com/franekjel/sokserver/rounds"
 	"github.com/franekjel/sokserver/tasks"
 )
 
 //Contest holds rounds in contest and groups allowed to participate
 type Contest struct {
 	fs      *fs.Fs
-	Rounds  map[string]*rounds.Round `yaml:"-"`
-	Ranking map[string]uint          `yaml:"-"`
-	Name    string                   `yaml:"name"`
-	Key     string                   `yaml:"key"`
+	Rounds  map[string]*Round `yaml:"-"`
+	Ranking map[string]uint   `yaml:"-"`
+	Name    string            `yaml:"name"`
+	Key     string            `yaml:"key"`
 }
 
 func (c *Contest) loadRanking() {
@@ -33,9 +32,9 @@ func (c *Contest) loadRanking() {
 }
 
 func (c *Contest) loadRounds(tasks map[string]*tasks.Task) {
-	c.Rounds = make(map[string]*rounds.Round)
+	c.Rounds = make(map[string]*Round)
 	for _, round := range c.fs.ListDirs("") {
-		c.Rounds[round] = rounds.LoadRound(fs.Init(c.fs.Path, round), tasks)
+		c.Rounds[round] = LoadRound(fs.Init(c.fs.Path, round), tasks)
 	}
 }
 
