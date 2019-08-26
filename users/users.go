@@ -13,6 +13,8 @@ import (
 
 //User data
 type User struct {
+	Login string `yaml:"-"`
+
 	Name         string   `yaml:"name"`
 	Surname      string   `yaml:"surname"`
 	PasswordHash string   `yaml:"password"`
@@ -23,10 +25,10 @@ type User struct {
 }
 
 func (u *User) loadData() {
-	if !u.fs.FileExist("user.yml") {
-		log.Fatal("User data missing! %s", u.fs.Path)
+	if !u.fs.FileExist(u.Login + ".yml") {
+		log.Fatal("User %s data missing! %s", u.Login, u.fs.Path)
 	}
-	buff := u.fs.ReadFile("user.yml")
+	buff := u.fs.ReadFile(u.Login + ".yml")
 	yaml.Unmarshal(buff, u)
 }
 
@@ -34,15 +36,16 @@ func (u *User) loadData() {
 func (u *User) SaveData() {
 	buff, err := yaml.Marshal(u)
 	if err == nil {
-		u.fs.WriteFile("user.yml", string(buff))
+		u.fs.WriteFile(u.Login+".yml", string(buff))
 	} else {
-		log.Error("Cannot save user config %s", u.fs.Path)
+		log.Error("Cannot save user %s config", u.Login)
 	}
 }
 
 //AddToGroup adds user to given group
 func (u *User) AddToGroup(group string) {
 	u.Groups = append(u.Groups, group)
+	u.SaveData()
 }
 
 func genHash(password []byte) (string, string) {
@@ -76,17 +79,18 @@ func (u *User) CheckGroup(group *string) bool {
 }
 
 //LoadUser create User based on data at given path
-func LoadUser(path *fs.Fs) *User {
-	user := new(User)
-	user.fs = path
+func LoadUser(path *fs.Fs, login string) *User {
+	user := User{Login: login, fs: path}
 	user.loadData()
 	log.Debug("name: %s, surname: %s, groups: %+q", user.Name, user.Surname, user.Groups)
-	return user
+	return &user
 }
 
 //AddUser add new User. Function get path to "users" dir. Password will be hashed and erased
 func AddUser(usersPath *fs.Fs, login *string, password []byte) *User {
 	user := new(User)
+	user.fs = usersPath
+	user.Login = *login
 	user.PasswordHash, user.PasswordSalt = genHash(password)
 	for i := range password { //erase password for better security
 		(password)[i] = 0
@@ -94,9 +98,6 @@ func AddUser(usersPath *fs.Fs, login *string, password []byte) *User {
 	if user.PasswordHash == "" { //it means there is error in hashing
 		return nil
 	}
-
-	usersPath.CreateDirectory(*login)
-	user.fs = fs.Init(usersPath.Path, *login)
 	log.Debug("Adding user: login: %s", *login)
 	user.SaveData()
 	return user

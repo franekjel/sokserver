@@ -1,6 +1,8 @@
 package server
 
 import (
+	"strings"
+
 	log "github.com/franekjel/sokserver/logger"
 
 	"github.com/franekjel/sokserver/config"
@@ -42,13 +44,16 @@ func (s *Server) loadUsers() {
 	if !s.fs.FileExist("users") {
 		log.Warn("\"users\" directory doesn't exist, creating")
 		s.fs.CreateDirectory("users")
-		return //we can parse any users
+		return //we can't parse any users
 	}
 	//at this point we are sure that "users" exists
 	dir := fs.Init(s.fs.Path, "users")
-	for _, login := range dir.ListDirs("") {
-		log.Info("Loading user %s", login)
-		s.users[login] = users.LoadUser(fs.Init(dir.Path, login))
+	for _, login := range dir.ListFiles("") {
+		if strings.HasSuffix(login, ".yml") {
+			login = strings.TrimSuffix(login, ".yml")
+			log.Info("Loading user %s", login)
+			s.users[login] = users.LoadUser(dir, login)
+		}
 	}
 }
 

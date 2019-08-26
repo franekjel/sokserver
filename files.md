@@ -16,10 +16,12 @@ In case there is no config it will be generated automatically with default value
 This folder contains submissions queued to check. It can contains unchecked submissions files.
 
 ### Users folder ($SOK/users)
-This folder contains users folders.
-
-### User folders ($SOK/users/$LOGIN)
-This folder contains user data and submissions. TODO
+This folder contains users data. Each file in folder is named $LOGIN.yml and contains $LOGIN data in fields:
+	- name (string) - user name
+	- surname (string) - user surname
+	- password (string) - hash of user password to verify login
+	- salt (string) - hash of password hash (for better security)
+	- groups ([]string) - list of users groups - contests in which user can participate
 
 ### Tasks folder ($SOK/tasks)
 This folder contains tasks. Sok use task format similar to sio2 (oioioi). Each task name should contains only letters. Each folder contains:
