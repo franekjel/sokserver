@@ -1,4 +1,4 @@
-package submissions
+package tasks
 
 import (
 	log "github.com/franekjel/sokserver/logger"

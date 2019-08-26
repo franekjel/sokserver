@@ -8,7 +8,7 @@ import (
 	"time"
 
 	log "github.com/franekjel/sokserver/logger"
-	"github.com/franekjel/sokserver/submissions"
+	"github.com/franekjel/sokserver/tasks"
 	"github.com/franekjel/sokserver/users"
 )
 
@@ -140,7 +140,7 @@ func (s *Server) submit(com *Command) []byte {
 	if !flag {
 		return returnStatus("Bad task or round")
 	}
-	sub := submissions.Submission{
+	sub := tasks.Submission{
 		User:    com.Login,
 		Task:    com.Task,
 		Round:   com.Round,

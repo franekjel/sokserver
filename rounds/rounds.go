@@ -6,7 +6,6 @@ import (
 
 	"github.com/franekjel/sokserver/fs"
 	log "github.com/franekjel/sokserver/logger"
-	"github.com/franekjel/sokserver/submissions"
 	"github.com/franekjel/sokserver/tasks"
 )
 
@@ -78,10 +77,10 @@ func (r *Round) loadData(tasks map[string]*tasks.Task) {
 	r.verifyTasks(tasks)
 }
 
-//roundname/username/taskname holds last user submissions. This function get results from this submission
+//roundname/username/taskname.yml holds last user submissions. This function get results from this submission
 func (r *Round) getResult(user, task string) uint {
-	submission := r.fs.ReadFile(fs.Join(user, task))
-	return submissions.LoadSubmission(submission).Sum
+	submission := r.fs.ReadFile(fs.Join(user, task+".yml"))
+	return tasks.LoadSubmission(submission).Sum
 }
 
 func (r *Round) loadRanking() {

@@ -22,7 +22,7 @@ func Init(path string, dir string) *Fs {
 	return &fs
 }
 
-//Join is wrapper around filepath.join
+//Join is wrapper on filepath.join
 func Join(path string, dir string) string {
 	return filepath.Join(path, dir)
 }

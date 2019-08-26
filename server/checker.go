@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/franekjel/sokserver/fs"
-	//"github.com/franekjel/sokserver/submissions"
+	//"github.com/franekjel/sokserver/tasks"
 )
 
 //CheckSubmissions read and check submissions from sok/queue
