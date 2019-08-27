@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/franekjel/sokserver/contests"
 	"github.com/franekjel/sokserver/fs"
 	"gopkg.in/yaml.v2"
 	"regexp"
@@ -32,6 +33,7 @@ type ReturnMessage struct {
 	RoundRanking   [][]uint        `yaml:"round_ranking,omitempty,flow"` //used in round_ranking
 	Filename       string          `yaml:"filename,omitempty"`           //used in get_task
 	Data           string          `yaml:"data,omitempty"`               //used in get_task, encoded in base64
+	Submissions    [][3]string     `yaml:"submissions,omitempty,flow"`   //used in list_submissions
 }
 
 //Execute given command. Return response to the client
@@ -128,7 +130,7 @@ func (s *Server) submit(com *Command) []byte {
 		return returnStatus("Round has not yet started")
 	}
 	if s.contests[com.Contest].Rounds[com.Round].End.Before(time.Now()) {
-		return returnStatus("Round has ended")
+		return returnStatus("Round ended")
 	}
 	flag := false
 	for _, t := range s.contests[com.Contest].Rounds[com.Round].Tasks {
@@ -141,6 +143,7 @@ func (s *Server) submit(com *Command) []byte {
 		return returnStatus("Bad task or round")
 	}
 	sub := tasks.Submission{
+		Id:      strconv.FormatInt(time.Now().UnixNano(), 16),
 		User:    com.Login,
 		Task:    com.Task,
 		Round:   com.Round,
@@ -152,9 +155,21 @@ func (s *Server) submit(com *Command) []byte {
 		return returnStatus("Unknown error in parsing submission")
 	}
 	queue := fs.Init(s.fs.Path, "queue")
-	queue.WriteFile(strconv.FormatInt(time.Now().UnixNano(), 16)+"_"+com.Login, string(buff))
+	queue.WriteFile(sub.Id+"_"+com.Login, string(buff))
 
 	return returnStatus("ok")
+}
+
+//check if round has given task
+func hasTask(round *contests.Round, task string) bool {
+	flag := false
+	for _, t := range round.Tasks {
+		if t == task {
+			flag = true
+			break
+		}
+	}
+	return flag
 }
 
 func (s *Server) getTask(com *Command) []byte {
@@ -167,18 +182,11 @@ func (s *Server) getTask(com *Command) []byte {
 	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
 		return returnStatus("Round has not yet started")
 	}
-	flag := false
-	var t string
-	for _, t = range s.contests[com.Contest].Rounds[com.Round].Tasks {
-		if t == com.Task {
-			flag = true
-			break
-		}
-	}
-	if !flag {
+
+	if !hasTask(s.contests[com.Contest].Rounds[com.Round], com.Task) {
 		return returnStatus("Bad task or round")
 	}
-	task := s.tasks[t]
+	task := s.tasks[com.Task]
 	msg := ReturnMessage{Status: "ok", Filename: task.StatementFileName, Data: task.Statement}
 	buff, _ := yaml.Marshal(msg)
 	return buff
@@ -211,6 +219,42 @@ func (s *Server) getRoundRanking(com *Command) []byte {
 		Users:        s.contests[com.Contest].Rounds[com.Round].Ranking.Names,
 		Tasks:        s.contests[com.Contest].Rounds[com.Round].Tasks,
 		RoundRanking: s.contests[com.Contest].Rounds[com.Round].Ranking.Points,
+	}
+	buff, _ := yaml.Marshal(msg)
+	return buff
+}
+
+func (s *Server) listSubmissions(com *Command) []byte {
+	if !s.checkContest(com) {
+		return returnStatus("Contest doesn't exist or you don't have permissions")
+	}
+	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
+		return returnStatus("Round doesn't exist")
+	}
+	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
+		return returnStatus("Round has not yet started")
+	}
+	if !hasTask(s.contests[com.Contest].Rounds[com.Round], com.Task) {
+		return returnStatus("Bad task or round")
+	}
+	subs := s.contests[com.Contest].Rounds[com.Round].ListSubmissions(com.Login, com.Task)
+	subsList := make([][3]string, 0, len(subs))
+	for _, sub := range subs {
+		var temp [3]string
+		temp[0] = sub.Id
+		if s.contests[com.Contest].Rounds[com.Round].ResultsShow.After(time.Now()) { //if results are hidden
+			temp[1] = sub.InitialStatus
+			temp[2] = "0"
+		} else {
+			temp[1] = sub.FinalStatus
+			temp[2] = strconv.FormatUint(uint64(sub.Sum), 10)
+		}
+		subsList = append(subsList, temp)
+	}
+
+	msg := ReturnMessage{
+		Status:      "ok",
+		Submissions: subsList,
 	}
 	buff, _ := yaml.Marshal(msg)
 	return buff

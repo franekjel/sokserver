@@ -36,7 +36,8 @@ type roundParse struct {
 	ResultsShow string   `yaml:"results_show_date"`
 }
 
-func (r *Round) listSubmissions(login string, task string) []*tasks.Submission {
+//ListSubmissions is used in command list_submissions to (surprise!) list submissions
+func (r *Round) ListSubmissions(login string, task string) []*tasks.Submission {
 	if !r.fs.FileExist(fs.Join(login, task)) {
 		return []*tasks.Submission{}
 	}

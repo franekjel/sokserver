@@ -7,14 +7,17 @@ import (
 
 //Submission holds users submissions data
 type Submission struct {
-	User    string            `yaml:"user"`
-	Task    string            `yaml:"task"`
-	Round   string            `yaml:"round"`
-	Contest string            `yaml:"contest"`
-	Code    string            `yaml:"code"`
-	Results map[string]string `yaml:"results,omitempty"` //status for each test like OK, Bad result, timeout etc
-	Points  map[string]uint   `yaml:"points,omitempty"`  //points for each testgroup
-	Sum     uint              `yaml:"sum,omitempty"`     //sum of points
+	Id            string            `yaml:"id"`
+	User          string            `yaml:"user"`
+	Task          string            `yaml:"task"`
+	Round         string            `yaml:"round"`
+	Contest       string            `yaml:"contest"`
+	Code          string            `yaml:"code"`
+	Results       map[string]string `yaml:"results,omitempty"`        //status for each test like OK, Bad result, timeout etc
+	Points        map[string]uint   `yaml:"points,omitempty"`         //points for each testgroup
+	Sum           uint              `yaml:"sum,omitempty"`            //sum of points
+	InitialStatus string            `yaml:"initial_status,omitempty"` //status of initial tests
+	FinalStatus   string            `yaml:"final_status,omitempty"`   //status of final tests
 }
 
 //LoadSubmission load submission data from yaml string

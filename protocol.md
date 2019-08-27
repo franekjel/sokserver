@@ -72,13 +72,12 @@ Commands:
     round_ranking: [[100, 0, 50], [0, 60, 0], [0, 0, 20]]
  	```
  	In this example user franekjel get 100 points for task1 and 50 for task3, user foo get 60 points for task2 and user bar 20 points for task3
+
  - list_submissions: Get list of submissions in given round. Requires contest and round field. Return message contains additional list field submissions. 
  Each of elements is list with three values - submission ID, status (eg. OK, TIMEOUT) and points. If resuls are not present yet points will be 0.
  	```
  	status: ok
- 	submissions:
- 	- ['15be7c9cec0ef768', 'OK', 100]
- 	- ['15be7c9cec0ab023', 'TIMEOUT', 78] 		
+ 	submissions: [['15be7c9cec0ef768', 'OK', 100], ['15be7c9cec0ab023', 'TIMEOUT', 78]]
  	``` 
  
 
