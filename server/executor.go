@@ -26,14 +26,15 @@ type Command struct {
 
 //ReturnMessage send to client after execute command
 type ReturnMessage struct {
-	Status         string          `yaml:"status"`                       //status may be "ok" or contains error
-	ContestRanking map[string]uint `yaml:"contest_ranking,omitempty"`    //used in contest_ranking
-	Tasks          []string        `yaml:"tasks,omitempty"`              //used in round_ranking
-	Users          []string        `yaml:"users,omitempty"`              //used in round_ranking
-	RoundRanking   [][]uint        `yaml:"round_ranking,omitempty,flow"` //used in round_ranking
-	Filename       string          `yaml:"filename,omitempty"`           //used in get_task
-	Data           string          `yaml:"data,omitempty"`               //used in get_task, encoded in base64
-	Submissions    [][3]string     `yaml:"submissions,omitempty,flow"`   //used in list_submissions
+	Status         string           `yaml:"status"`                       //status may be "ok" or contains error
+	ContestRanking map[string]uint  `yaml:"contest_ranking,omitempty"`    //used in contest_ranking
+	Tasks          []string         `yaml:"tasks,omitempty"`              //used in round_ranking
+	Users          []string         `yaml:"users,omitempty"`              //used in round_ranking
+	RoundRanking   [][]uint         `yaml:"round_ranking,omitempty,flow"` //used in round_ranking
+	Filename       string           `yaml:"filename,omitempty"`           //used in get_task
+	Data           string           `yaml:"data,omitempty"`               //used in get_task, encoded in base64
+	Submissions    [][3]string      `yaml:"submissions,omitempty,flow"`   //used in list_submissions
+	Submission     tasks.Submission `yaml:"submission,omitempty"`         //used in get_submission
 }
 
 //Execute given command. Return response to the client
@@ -255,6 +256,40 @@ func (s *Server) listSubmissions(com *Command) []byte {
 	msg := ReturnMessage{
 		Status:      "ok",
 		Submissions: subsList,
+	}
+	buff, _ := yaml.Marshal(msg)
+	return buff
+}
+
+func (s *Server) getSubmission(com *Command) []byte {
+	if !s.checkContest(com) {
+		return returnStatus("Contest doesn't exist or you don't have permissions")
+	}
+	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
+		return returnStatus("Round doesn't exist")
+	}
+	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
+		return returnStatus("Round has not yet started")
+	}
+	if !hasTask(s.contests[com.Contest].Rounds[com.Round], com.Task) {
+		return returnStatus("Bad task or round")
+	}
+	subs := s.contests[com.Contest].Rounds[com.Round].ListSubmissions(com.Login, com.Task)
+	var sub *tasks.Submission
+	flag := false
+	for _, sub = range subs {
+		if sub.Id == com.Data {
+			flag = true
+			break
+		}
+	}
+	if flag == false {
+		return returnStatus("Bad submission ID")
+	}
+
+	msg := ReturnMessage{
+		Status:     "ok",
+		Submission: *sub,
 	}
 	buff, _ := yaml.Marshal(msg)
 	return buff

@@ -73,15 +73,20 @@ Commands:
  	```
  	In this example user franekjel get 100 points for task1 and 50 for task3, user foo get 60 points for task2 and user bar 20 points for task3
 
- - list_submissions: Get list of submissions in given round. Requires contest and round field. Return message contains additional list field submissions. 
+ - list_submissions: Get list of submissions in given round. Requires contest and round fields. Return message contains additional list field submissions. 
  Each of elements is list with three values - submission ID, status (eg. OK, TIMEOUT) and points. If resuls are not present yet points will be 0.
  	```
  	status: ok
  	submissions: [['15be7c9cec0ef768', 'OK', 100], ['15be7c9cec0ab023', 'TIMEOUT', 78]]
  	``` 
- 
-
-Todo:
-- list_submissions
-- last_submission
-- get_submission
+ - get_submission: Get given submission. Requires contest, round, task and data fields. Data field contains submission ID. Example:
+ 	```
+	login: franekjel
+	password: P@ssword
+	command: submit
+	contest: con1
+	round: round1
+	task: task1
+	data: '15be7c9cec0ef768'
+ 	``` 
+	Return message contains yamled submission struct (as in tasks/submissions.go).
