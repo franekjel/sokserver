@@ -64,6 +64,10 @@ func (s *Server) Execute(buff []byte) []byte {
 		return s.getContestRanking(&com)
 	case "round_ranking":
 		return s.getRoundRanking(&com)
+	case "list_submissions":
+		return s.listSubmissions(&com)
+	case "get_submission":
+		return s.getSubmission(&com)
 	}
 
 	return returnStatus("Bad command name")
