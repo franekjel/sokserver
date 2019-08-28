@@ -125,14 +125,8 @@ func (s *Server) createAccount(com *Command) []byte {
 }
 
 func (s *Server) submit(com *Command) []byte {
-	if !s.checkContest(com) {
-		return returnStatus("Contest doesn't exist or you don't have permissions")
-	}
-	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
-		return returnStatus("Round doesn't exist")
-	}
-	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
-		return returnStatus("Round has not yet started")
+	if ok, status := s.checkRound(com); !ok {
+		return returnStatus(status)
 	}
 	if s.contests[com.Contest].Rounds[com.Round].End.Before(time.Now()) {
 		return returnStatus("Round ended")
@@ -178,14 +172,8 @@ func hasTask(round *contests.Round, task string) bool {
 }
 
 func (s *Server) getTask(com *Command) []byte {
-	if !s.checkContest(com) {
-		return returnStatus("Contest doesn't exist or you don't have permissions")
-	}
-	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
-		return returnStatus("Round doesn't exist")
-	}
-	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
-		return returnStatus("Round has not yet started")
+	if ok, status := s.checkRound(com); !ok {
+		return returnStatus(status)
 	}
 
 	if !hasTask(s.contests[com.Contest].Rounds[com.Round], com.Task) {
@@ -207,14 +195,8 @@ func (s *Server) getContestRanking(com *Command) []byte {
 }
 
 func (s *Server) getRoundRanking(com *Command) []byte {
-	if !s.checkContest(com) {
-		return returnStatus("Contest doesn't exist or you don't have permissions")
-	}
-	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
-		return returnStatus("Round doesn't exist")
-	}
-	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
-		return returnStatus("Round has not yet started")
+	if ok, status := s.checkRound(com); !ok {
+		return returnStatus(status)
 	}
 	if s.contests[com.Contest].Rounds[com.Round].ResultsShow.After(time.Now()) {
 		return returnStatus("Results will be shown at" + s.contests[com.Contest].Rounds[com.Round].ResultsShow.Format("2006-01-02 15:04"))
@@ -230,14 +212,8 @@ func (s *Server) getRoundRanking(com *Command) []byte {
 }
 
 func (s *Server) listSubmissions(com *Command) []byte {
-	if !s.checkContest(com) {
-		return returnStatus("Contest doesn't exist or you don't have permissions")
-	}
-	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
-		return returnStatus("Round doesn't exist")
-	}
-	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
-		return returnStatus("Round has not yet started")
+	if ok, status := s.checkRound(com); !ok {
+		return returnStatus(status)
 	}
 	if !hasTask(s.contests[com.Contest].Rounds[com.Round], com.Task) {
 		return returnStatus("Bad task or round")
@@ -266,14 +242,8 @@ func (s *Server) listSubmissions(com *Command) []byte {
 }
 
 func (s *Server) getSubmission(com *Command) []byte {
-	if !s.checkContest(com) {
-		return returnStatus("Contest doesn't exist or you don't have permissions")
-	}
-	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
-		return returnStatus("Round doesn't exist")
-	}
-	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
-		return returnStatus("Round has not yet started")
+	if ok, status := s.checkRound(com); !ok {
+		return returnStatus(status)
 	}
 	if !hasTask(s.contests[com.Contest].Rounds[com.Round], com.Task) {
 		return returnStatus("Bad task or round")
@@ -297,4 +267,17 @@ func (s *Server) getSubmission(com *Command) []byte {
 	}
 	buff, _ := yaml.Marshal(msg)
 	return buff
+}
+
+func (s *Server) checkRound(com *Command) (bool, string) {
+	if !s.checkContest(com) {
+		return false, "Contest doesn't exist or you don't have permissions"
+	}
+	if _, ok := s.contests[com.Contest].Rounds[com.Round]; !ok {
+		return false, "Round doesn't exist"
+	}
+	if s.contests[com.Contest].Rounds[com.Round].Start.After(time.Now()) {
+		return false, "Round has not yet started"
+	}
+	return true, ""
 }
