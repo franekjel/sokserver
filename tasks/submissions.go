@@ -14,6 +14,8 @@ type Submission struct {
 	Contest       string            `yaml:"contest"`
 	Code          string            `yaml:"code"`
 	Results       map[string]string `yaml:"results,omitempty"`        //status for each test like OK, Bad result, timeout etc
+	Time          map[string]uint   `yaml:"time,omitempty"`           //time of execution of each test
+	MaxTime       map[string]uint   `yaml:"max_time,omitempty"`       //max time of execution - empty, used only during marshall to send to user TODO
 	Points        map[string]uint   `yaml:"points,omitempty"`         //points for each testgroup
 	Sum           uint              `yaml:"sum,omitempty"`            //sum of points
 	InitialStatus string            `yaml:"initial_status,omitempty"` //status of initial tests
