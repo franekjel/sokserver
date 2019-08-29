@@ -11,16 +11,18 @@ import (
 	log "github.com/franekjel/sokserver/logger"
 )
 
-type test struct {
-	name        string
-	timeLimit   uint
-	memoryLimit uint
+//Test is single input and output with time and memory limit
+type Test struct {
+	Name        string
+	TimeLimit   uint
+	MemoryLimit uint
 }
 
-type testGroup struct {
-	name   string
-	tests  map[string]test
-	points uint
+//TestGroup groups single tests. To get points all tests in group must be passed
+type TestGroup struct {
+	Name   string
+	Tests  map[string]Test
+	Points uint
 }
 
 type taskConfig struct {
@@ -35,13 +37,18 @@ type taskConfig struct {
 type Task struct {
 	Name               string
 	Config             taskConfig
-	InitialTests       map[string]testGroup
-	FinalTests         map[string]testGroup
+	InitialTests       map[string]TestGroup
+	FinalTests         map[string]TestGroup
 	fs                 *fs.Fs
 	defaultMemoryLimit uint
 	defaultTimeLimit   uint
 	Statement          string
 	StatementFileName  string
+}
+
+//sets points for each testGroup
+func (t *Task) setPoints() {
+	//TODO
 }
 
 func (t *Task) listInputs() []string {
@@ -85,26 +92,26 @@ func isInitialTest(s []string) bool {
 	return false
 }
 
-func (t *Task) insertInitalTest(te *test, groupName *string) {
+func (t *Task) insertInitalTest(te *Test, groupName *string) {
 	group, ok := t.InitialTests[*groupName]
 	if ok {
-		group.tests[te.name] = *te
+		group.Tests[te.Name] = *te
 	} else {
-		t.InitialTests[*groupName] = testGroup{
-			name:  *groupName,
-			tests: map[string]test{te.name: *te},
+		t.InitialTests[*groupName] = TestGroup{
+			Name:  *groupName,
+			Tests: map[string]Test{te.Name: *te},
 		}
 	}
 }
 
-func (t *Task) insertFinalTest(te *test, groupName *string) {
+func (t *Task) insertFinalTest(te *Test, groupName *string) {
 	group, ok := t.FinalTests[*groupName]
 	if ok {
-		group.tests[te.name] = *te
+		group.Tests[te.Name] = *te
 	} else {
-		t.FinalTests[*groupName] = testGroup{
-			name:  *groupName,
-			tests: map[string]test{te.name: *te},
+		t.FinalTests[*groupName] = TestGroup{
+			Name:  *groupName,
+			Tests: map[string]Test{te.Name: *te},
 		}
 	}
 }
@@ -127,9 +134,9 @@ func (t *Task) addTests() {
 				continue
 			}
 			if isInitialTest(s) {
-				t.insertInitalTest(&test{name: i}, &s[2])
+				t.insertInitalTest(&Test{Name: i}, &s[2])
 			} else {
-				t.insertFinalTest(&test{name: i}, &s[2])
+				t.insertFinalTest(&Test{Name: i}, &s[2])
 			}
 		}
 	}
@@ -146,24 +153,24 @@ func (t *Task) parseConfig(globalConfig *config.Config) {
 	yaml.Unmarshal(s, &t.Config)
 }
 
-func (t *Task) setLimits(tests *map[string]testGroup) {
+func (t *Task) setLimits(tests *map[string]TestGroup) {
 	for _, i := range *tests {
-		log.Debug("Test group: %s:", i.name)
-		for _, j := range i.tests {
+		log.Debug("Test group: %s:", i.Name)
+		for _, j := range i.Tests {
 
-			j.memoryLimit = t.Config.MemoryLimit
-			j.timeLimit = t.Config.TimeLimit
-			if limit, ok := t.Config.TimeLimits[j.name]; ok {
+			j.MemoryLimit = t.Config.MemoryLimit
+			j.TimeLimit = t.Config.TimeLimit
+			if limit, ok := t.Config.TimeLimits[j.Name]; ok {
 				if limit < 100000 {
-					j.timeLimit = limit
+					j.TimeLimit = limit
 				}
 			}
-			if limit, ok := t.Config.MemoryLimits[j.name]; ok {
+			if limit, ok := t.Config.MemoryLimits[j.Name]; ok {
 				if limit < 1024*1024 {
-					j.memoryLimit = limit
+					j.MemoryLimit = limit
 				}
 			}
-			log.Debug("Test: %s, time: %d, memory %d", j.name, j.timeLimit, j.memoryLimit)
+			log.Debug("Test: %s, time: %d, memory %d", j.Name, j.TimeLimit, j.MemoryLimit)
 		}
 	}
 
@@ -212,8 +219,8 @@ func LoadTask(fs *fs.Fs, conf *config.Config, name *string) *Task {
 		fs:                 fs,
 		defaultTimeLimit:   conf.DefaultTimeLimit,
 		defaultMemoryLimit: conf.DefaultMemoryLimit,
-		InitialTests:       make(map[string]testGroup, 1),
-		FinalTests:         make(map[string]testGroup, 10),
+		InitialTests:       make(map[string]TestGroup, 1),
+		FinalTests:         make(map[string]TestGroup, 10),
 	}
 	t.parseConfig(conf)
 	log.Info("Loading task %s: %s", t.fs.Path, t.Config.Title)
