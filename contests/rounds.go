@@ -53,6 +53,19 @@ func (r *Round) ListSubmissions(login string, task string) []*tasks.Submission {
 	return re
 }
 
+//GetSubmission return submission with given id
+func (r *Round) GetSubmission(login string, task string, id string) *tasks.Submission {
+	if !r.fs.FileExist(fs.Join(login, task)) {
+		return nil
+	}
+	dir := fs.Init(r.fs.Path, fs.Join(login, task))
+	if !dir.FileExist(id + ".yml") {
+		return nil
+	}
+	sub := tasks.LoadSubmission(dir.ReadFile(id + ".yml"))
+	return sub
+}
+
 func (r *Round) verifyTasks(tasks map[string]*tasks.Task) {
 	newTasks := make([]string, 0, len(r.Tasks))
 	for _, task := range r.Tasks {

@@ -248,19 +248,10 @@ func (s *Server) getSubmission(com *Command) []byte {
 	if !hasTask(s.contests[com.Contest].Rounds[com.Round], com.Task) {
 		return returnStatus("Bad task or round")
 	}
-	subs := s.contests[com.Contest].Rounds[com.Round].ListSubmissions(com.Login, com.Task)
-	var sub *tasks.Submission
-	flag := false
-	for _, sub = range subs {
-		if sub.Id == com.Data {
-			flag = true
-			break
-		}
-	}
-	if flag == false {
+	sub := s.contests[com.Contest].Rounds[com.Round].GetSubmission(com.Login, com.Task, com.Data)
+	if sub == nil {
 		return returnStatus("Bad submission ID")
 	}
-
 	msg := ReturnMessage{
 		Status:     "ok",
 		Submission: *sub,
