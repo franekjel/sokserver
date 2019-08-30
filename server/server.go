@@ -97,6 +97,12 @@ func InitServer(dir string) {
 		log.Warn("\"contests\" directory doesn't exist, creating")
 		server.fs.CreateDirectory("queue")
 	}
+	if !server.fs.FileExist("box") { //creating box for checking tasks
+		if !server.fs.CreateDirectory("box") {
+			log.Fatal("Cannot create box check test")
+		}
+		server.fs.WriteFile(fs.Join(server.fs.Path, "box"), "")
+	}
 	ch := make(chan *connectionData)
 	go server.startListening(ch)
 	go server.CheckSubmissions(fs.Init(server.fs.Path, "queue"), ch)

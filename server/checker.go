@@ -1,6 +1,7 @@
 package server
 
 import (
+	"os/exec"
 	"time"
 
 	log "github.com/franekjel/sokserver/logger"
@@ -29,13 +30,15 @@ func (s *Server) check(buff []byte) {
 	log.Info("Checking submission from %s, contest %s, round %s, task %s", sub.User, sub.Contest, sub.Round, sub.Task)
 	task := s.tasks[sub.Task]
 
+	s.compileCode(sub) //TODO check for errors
+
 	ch := make(chan bool) //to control threads amount
 	for i := uint16(0); i < s.conf.Workers; i++ {
 		ch <- true //new thread will start only if there is something in chan
 	}
 
 	for _, group := range task.InitialTests {
-		checkTestGroup(ch, &group, sub)
+		s.checkTestGroup(ch, &group, sub)
 	}
 	//now we wait for all checking threads to end (eckTestGroups is invoked without "go")
 
@@ -44,16 +47,27 @@ func (s *Server) check(buff []byte) {
 	}
 }
 
-func checkTestGroup(ch chan bool, group *tasks.TestGroup, sub *tasks.Submission) {
+func (s *Server) checkTestGroup(ch chan bool, group *tasks.TestGroup, sub *tasks.Submission) {
 	for _, test := range group.Tests {
 		<-ch
-		go checkTest(ch, &test, sub)
+		go s.checkTest(ch, &test, sub)
 	}
 
 }
 
-func checkTest(ch chan bool, test *tasks.Test, sub *tasks.Submission) {
-	//TODO
+//compiles solution code. TODO - gcc compile flags in config
+func (s *Server) compileCode(sub *tasks.Submission) {
+	cmd := exec.Command("g++", "--static")
+	cmd.Output()
+	//TODO check for compilation errors, if there are any stop further proceeding
+}
+
+//execute solution code on test. TODO - configurable sio2jail path
+func (s *Server) checkTest(ch chan bool, test *tasks.Test, sub *tasks.Submission) {
+	commandString := ""
+	cmd := exec.Command(fs.Join(s.fs.Path, "sio2jail"), commandString)
+	cmd.Output()
+	//TODO - check output for status and time, set in submissions struct, put value to chan
 }
 
 //this function calcs and sets points for TestGroup
