@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bytes"
+	"io"
 	"os/exec"
 	"time"
 
@@ -40,7 +42,7 @@ func (s *Server) check(buff []byte) {
 	for _, group := range task.InitialTests {
 		s.checkTestGroup(ch, &group, sub)
 	}
-	//now we wait for all checking threads to end (eckTestGroups is invoked without "go")
+	//now we wait for all checking threads to end (checkTestGroups is invoked without "go")
 
 	for _, group := range task.InitialTests {
 		setPoints(&group, sub)
@@ -56,10 +58,21 @@ func (s *Server) checkTestGroup(ch chan bool, group *tasks.TestGroup, sub *tasks
 }
 
 //compiles solution code. TODO - gcc compile flags in config
-func (s *Server) compileCode(sub *tasks.Submission) {
-	cmd := exec.Command("g++", "--static")
-	cmd.Output()
-	//TODO check for compilation errors, if there are any stop further proceeding
+func (s *Server) compileCode(sub *tasks.Submission) (bool, string) {
+	cmd := exec.Command("g++", "-x", "c++", "--static", "-o", "/tmp/exe", "-")
+	stdin, _ := cmd.StdinPipe()
+	defer stdin.Close()
+	io.WriteString(stdin, sub.Code)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		if err.Error() == "exit status 1" {
+			return false, stderr.String()
+		}
+		log.Fatal("Cannot compile program: %s", err.Error())
+	}
+	return true, ""
 }
 
 //execute solution code on test. TODO - configurable sio2jail path
