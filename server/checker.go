@@ -32,7 +32,7 @@ func (s *Server) check(buff []byte) {
 	log.Info("Checking submission from %s, contest %s, round %s, task %s", sub.User, sub.Contest, sub.Round, sub.Task)
 	task := s.tasks[sub.Task]
 
-	s.compileCode(sub) //TODO check for errors
+	compileCode(sub) //TODO check for errors
 
 	ch := make(chan bool) //to control threads amount
 	for i := uint16(0); i < s.conf.Workers; i++ {
@@ -58,11 +58,11 @@ func (s *Server) checkTestGroup(ch chan bool, group *tasks.TestGroup, sub *tasks
 }
 
 //compiles solution code. TODO - gcc compile flags in config
-func (s *Server) compileCode(sub *tasks.Submission) (bool, string) {
+func compileCode(sub *tasks.Submission) (bool, string) {
 	cmd := exec.Command("g++", "-x", "c++", "--static", "-o", "/tmp/exe", "-")
 	stdin, _ := cmd.StdinPipe()
-	defer stdin.Close()
 	io.WriteString(stdin, sub.Code)
+	stdin.Close()
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	err := cmd.Run()
