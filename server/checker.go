@@ -20,6 +20,7 @@ func (s *Server) CheckSubmissions(fs *fs.Fs, ch chan *connectionData) {
 			files := fs.ListFiles("")
 			buff := fs.ReadFile(files[0])
 			s.check(buff)
+			fs.RemoveFile(files[0])
 		} else {
 			time.Sleep(time.Millisecond * 500) //maybe not best solution...
 		}
@@ -29,10 +30,19 @@ func (s *Server) CheckSubmissions(fs *fs.Fs, ch chan *connectionData) {
 //check given submission submission - in many threads (specified in config - workers)
 func (s *Server) check(buff []byte) {
 	sub := tasks.LoadSubmission(buff)
+	sub.Sum = 0
 	log.Info("Checking submission from %s, contest %s, round %s, task %s", sub.User, sub.Contest, sub.Round, sub.Task)
 	task := s.tasks[sub.Task]
 
-	compileCode(sub) //TODO check for errors
+	ok, err := compileCode(sub) //TODO check for errors
+	if !ok {
+		n := 200
+		if len(err) < 200 {
+			n = len(err)
+		}
+		sub.InitialStatus = err[:n] //since c++ compilation error may be very long, we store only beginning
+		return
+	}
 
 	ch := make(chan bool) //to control threads amount
 	for i := uint16(0); i < s.conf.Workers; i++ {
@@ -54,7 +64,6 @@ func (s *Server) checkTestGroup(ch chan bool, group *tasks.TestGroup, sub *tasks
 		<-ch
 		go s.checkTest(ch, &test, sub)
 	}
-
 }
 
 //compiles solution code. TODO - gcc compile flags in config

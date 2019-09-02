@@ -94,3 +94,12 @@ func (fs *Fs) CreateDirectory(name string) bool {
 	}
 	return true
 }
+
+//RemoveFile removes given file
+func (fs *Fs) RemoveFile(name string) bool {
+	err := os.Remove(name)
+	if err != nil {
+		return false
+	}
+	return true
+}
