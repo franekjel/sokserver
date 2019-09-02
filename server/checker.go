@@ -69,7 +69,7 @@ func (s *Server) checkTestGroup(ch chan bool, group *tasks.TestGroup, sub *tasks
 
 //compiles solution code. TODO - gcc compile flags in config
 func compileCode(sub *tasks.Submission) (bool, string) {
-	cmd := exec.Command("g++", "-x", "c++", "--static", "-o", "/tmp/exe", "-")
+	cmd := exec.Command("g++", "-x", "c++", "--static", "-O2", "-o", "/tmp/exe", "-")
 	stdin, _ := cmd.StdinPipe()
 	io.WriteString(stdin, sub.Code)
 	stdin.Close()
@@ -97,36 +97,47 @@ func (s *Server) checkTest(ch chan bool, test *tasks.Test, sub *tasks.Submission
 		"-o", "oiaug",
 		"/tmp/exe",
 		"<"+fs.Join(inDir.Path, sub.Task+test.Name+".in"),
-		">/tmp/"+sub.Task+test.Name+".out", //NOTE - must be deleted
 	)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	output, err := cmd.Output()
 	if err != nil {
 		log.Warn("Runtime error during cheking submission %s", sub.Id)
-		sub.Results[test.Name] = "RE"
+		sub.Results[test.Name] = "runtime error"
+		return
+	}
+
+	results := bytes.Fields(stderr.Bytes())
+	if string(results[0]) != "OK" {
+		sub.Results[test.Name] = string(results[len(results)-1])
 		return
 	}
 	outDir := fs.Init(fs.CreatePath(s.fs.Path, "tasks", sub.Task, "out"), "")
-	if !checkOutput(output, outDir.ReadFile(sub.Task+test.Name+".out")) {
-
+	if ok, diff := checkOutput(output, outDir.ReadFile(sub.Task+test.Name+".out")); !ok {
+		sub.Results[test.Name] = diff
+		return
 	}
-	//TODO: check execution time and if output is correct
+
+	sub.Results[test.Name] = "OK"
+	temp, _ := strconv.ParseUint(string(results[2]), 10, 64)
+	sub.Time[test.Name] = uint(temp)
 }
 
-func checkOutput(userOutput []byte, goodOutput []byte) bool {
-
+func checkOutput(userOutput []byte, goodOutput []byte) (bool, string) {
+	return true, ""
 }
 
 //this function calcs and sets points for TestGroup
 func setPoints(group *tasks.TestGroup, sub *tasks.Submission) {
 	pointsFactor := 1.0
 	for _, test := range group.Tests {
-		if sub.Results[test.Name] == "MLE" || sub.Results[test.Name] == "RV" || sub.Results[test.Name] == "RE" || sub.Results[test.Name] == "TLE" {
+		if sub.Results[test.Name] != "OK" {
 			pointsFactor = 0
 			break
-		} else if float64(test.TimeLimit)/float64(sub.Time[test.Name]) > 0.5 {
-			temp := 2 * (1.0 - float64(test.TimeLimit)/float64(sub.Time[test.Name]))
-			if temp < pointsFactor {
-				pointsFactor = temp
+		} else if float64(sub.Time[test.Name])/float64(test.TimeLimit) > 0.5 { //if program exceeds half of time points will decrase linearly (to 0 at time limit)
+			cur := 2 * (1.0 - float64(sub.Time[test.Name])/float64(test.TimeLimit))
+			if cur < pointsFactor {
+				pointsFactor = cur
 			}
 		}
 	}
