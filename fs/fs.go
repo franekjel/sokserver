@@ -27,6 +27,14 @@ func Join(path string, dir string) string {
 	return filepath.Join(path, dir)
 }
 
+//CreatePath creates path from given folders
+func CreatePath(dir string, dirs ...string) string {
+	for _, cur := range dirs {
+		filepath.Join(dir, cur)
+	}
+	return dir
+}
+
 //FileExist check if file exist
 func (fs *Fs) FileExist(file string) bool {
 	_, err := os.Stat(filepath.Join(fs.Path, file))

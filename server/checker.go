@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"os/exec"
+	"strconv"
 	"time"
 
 	log "github.com/franekjel/sokserver/logger"
@@ -86,10 +87,33 @@ func compileCode(sub *tasks.Submission) (bool, string) {
 
 //execute solution code on test. TODO - configurable sio2jail path
 func (s *Server) checkTest(ch chan bool, test *tasks.Test, sub *tasks.Submission) {
-	commandString := ""
-	cmd := exec.Command(fs.Join(s.fs.Path, "sio2jail"), commandString)
-	cmd.Output()
-	//TODO - check output for status and time, set in submissions struct, put value to chan
+	inDir := fs.Init(fs.CreatePath(s.fs.Path, "tasks", sub.Task, "in"), "")
+	cmd := exec.Command(fs.Join(s.fs.Path, "sio2jail"),
+		"-b", "/tmp/box:/:ro",
+		"--memory-limit", strconv.FormatUint(uint64(test.MemoryLimit), 10),
+		"--instruction-count-limit", strconv.FormatUint(uint64(test.TimeLimit*2*1000000), 10), //TODO - clean this magic number, this is time*2*10^9/1000
+		"--rtimelimit", strconv.FormatUint(uint64(test.TimeLimit*5), 10)+"ms",
+		"--output-limit", "64K",
+		"-o", "oiaug",
+		"/tmp/exe",
+		"<"+fs.Join(inDir.Path, sub.Task+test.Name+".in"),
+		">/tmp/"+sub.Task+test.Name+".out", //NOTE - must be deleted
+	)
+	output, err := cmd.Output()
+	if err != nil {
+		log.Warn("Runtime error during cheking submission %s", sub.Id)
+		sub.Results[test.Name] = "RE"
+		return
+	}
+	outDir := fs.Init(fs.CreatePath(s.fs.Path, "tasks", sub.Task, "out"), "")
+	if !checkOutput(output, outDir.ReadFile(sub.Task+test.Name+".out")) {
+
+	}
+	//TODO: check execution time and if output is correct
+}
+
+func checkOutput(userOutput []byte, goodOutput []byte) bool {
+
 }
 
 //this function calcs and sets points for TestGroup
