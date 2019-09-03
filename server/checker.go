@@ -124,6 +124,21 @@ func (s *Server) checkTest(ch chan bool, test *tasks.Test, sub *tasks.Submission
 }
 
 func checkOutput(userOutput []byte, goodOutput []byte) (bool, string) {
+	out1 := bytes.Fields(userOutput)
+	out2 := bytes.Fields(goodOutput)
+	if len(out1) < len(out2) {
+		return false, "Bad output at position" + strconv.FormatInt(int64(len(out1)), 10) + ". Expected" + string(out2[len(out1)]) + ", get EOF"
+	}
+
+	if len(out1) > len(out2) {
+		return false, "Bad output - too long. At position" + strconv.FormatInt(int64(len(out2)), 10) + "get" + string(out1[len(out2)]) + ", expected EOF"
+	}
+
+	for i := range out1 { //here len(out1)==len(out2)
+		if !bytes.Equal(out1[i], out2[i]) {
+			return false, "Bad output at position" + strconv.FormatInt(int64(i), 10) + ". Expected" + string(out2[i]) + ", get" + string(out1[i])
+		}
+	}
 	return true, ""
 }
 
