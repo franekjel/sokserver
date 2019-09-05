@@ -21,10 +21,11 @@ func readUint(conn net.Conn) uint {
 	c := bufio.NewReader(conn)
 	for i := 0; i < 4; i++ {
 		b, err := c.ReadByte()
+		buff[i] = b
 		if err != nil {
+			log.Warn("Cannot read message size: %s", err.Error())
 			return 0
 		}
-		buff[i] = b
 	}
 	return uint(binary.BigEndian.Uint32(buff))
 }
@@ -34,12 +35,14 @@ func readNBytes(conn net.Conn, n uint) []byte {
 	buff := make([]byte, n)
 	var i uint
 	for i < n {
-		nbyte, err := conn.Read(buff[i:])
+		nbyte, err := conn.Read(buff[i:n])
+		i += uint(nbyte)
 		if err != nil {
+			log.Warn("Cannot read message: %s", err.Error())
 			return nil
 		}
-		i += uint(nbyte)
 	}
+	log.Info("%s received %s", conn.LocalAddr().String(), buff)
 	return buff
 }
 
@@ -49,7 +52,7 @@ func sendUint(conn net.Conn, n uint32) {
 	binary.BigEndian.PutUint32(buff, n)
 	var i int
 	for i < 4 {
-		n, err := conn.Write(buff)
+		n, err := conn.Write(buff[i:4])
 		i += n
 		if err != nil {
 			log.Error("Cannot send data to client %s. %s", conn.RemoteAddr().String(), err.Error())
@@ -58,15 +61,17 @@ func sendUint(conn net.Conn, n uint32) {
 	}
 }
 
-//send given uint
+//send given slice
 func sendSlice(conn net.Conn, buff []byte) {
 	var i = 0
-	for {
-		nbyte, err := conn.Write(buff[i:])
+	n := len(buff)
+	for i < n {
+		nbyte, err := conn.Write(buff[i:n])
+		i += nbyte
 		if err != nil {
+			log.Error("Cannot send slice to client")
 			return
 		}
-		i += nbyte
 	}
 }
 
@@ -93,7 +98,7 @@ func readMessage(conn net.Conn, ch chan *connectionData) {
 }
 
 func (s *Server) startListening(ch chan *connectionData) {
-	l, err := net.Listen("tcp", "127.0.0.1:"+strconv.FormatUint(uint64(s.conf.Port), 10))
+	l, err := net.Listen("tcp", ":"+strconv.FormatUint(uint64(s.conf.Port), 10))
 	if err != nil {
 		log.Fatal("Cannot start listening on port %s: %s", strconv.FormatUint(uint64(s.conf.Port), 10), err.Error())
 	}

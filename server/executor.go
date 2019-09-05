@@ -39,11 +39,11 @@ type ReturnMessage struct {
 
 //Execute given command. Return response to the client
 func (s *Server) Execute(buff []byte) []byte {
-	var com Command
-	err := yaml.Unmarshal(buff, com)
+	com := Command{}
+	err := yaml.Unmarshal(buff, &com)
 	if err != nil {
-		log.Error("Error parsing command")
-		return returnStatus("Error parsing request - bad or currupted struture")
+		log.Error("Error parsing command %s", err.Error())
+		return returnStatus("Error parsing request - bad or currupted struture:")
 	}
 	if com.Command == "create_account" { //one case when we don't check password
 		return s.createAccount(&com)
