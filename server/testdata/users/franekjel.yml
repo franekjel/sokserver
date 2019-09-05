@@ -1,0 +1,7 @@
+name: Franciszek
+surname: Jełowicki
+password: $6$abcdefghijklmnop$5IETrK7DfmBLCcDDd2uUkHSMDWAJF6Icsj01AxgOg03tQ1u38QhUaKCWDwYi/e/EJYW.XtfPCzI7EG7M7zlvZ.
+salt: ""
+groups: 
+- con1
+- grp1

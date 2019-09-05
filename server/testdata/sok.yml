@@ -1,0 +1,5 @@
+port: 19151
+workers: 4
+default_memory_limit: 32768
+default_time_limit: 1000
+info: Sok server
