@@ -43,6 +43,11 @@ Commands:
 	filename: taskzad.txt
 	data: UHJvYmxlbSBzdGF0ZW1lbnQgZm9yIHRhc2s=
  	```
+ - list_contests: Get contests list. Return message contains list "contests". Each element in that list contains contest id and contest descriptio. Example (of return message):
+ 	```
+	status: ok
+	contests: [[easy, "Contest for beginners"], [med, "Contest for more advanced"]]
+ 	``` 
  - submit: Submits solution. Requires contest, round, task and data. Data field contains code. Example:
 	```
 	login: franekjel
@@ -77,7 +82,7 @@ Commands:
  	In this example user franekjel get 100 points for task1 and 50 for task3, user foo get 60 points for task2 and user bar 20 points for task3
 
  - list_submissions: Get list of submissions in given round. Requires contest and round fields. Return message contains additional list field submissions. 
- Each of elements is list with three values - submission ID, status (eg. OK, TIMEOUT) and points. If resuls are not present yet points will be 0.
+ Each element is list with three values - submission ID, status (eg. OK, TIMEOUT) and points. If resuls are not present yet points will be 0.
  	```
  	status: ok
  	submissions: [['15be7c9cec0ef768', 'OK', 100], ['15be7c9cec0ab023', 'TIMEOUT', 78]]

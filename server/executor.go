@@ -1,12 +1,13 @@
 package server
 
 import (
-	"github.com/franekjel/sokserver/contests"
-	"github.com/franekjel/sokserver/fs"
-	"gopkg.in/yaml.v2"
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/franekjel/sokserver/contests"
+	"github.com/franekjel/sokserver/fs"
+	"gopkg.in/yaml.v2"
 
 	log "github.com/franekjel/sokserver/logger"
 	"github.com/franekjel/sokserver/tasks"
@@ -35,6 +36,7 @@ type ReturnMessage struct {
 	Data           string           `yaml:"data,omitempty"`               //used in get_task, encoded in base64
 	Submissions    [][3]string      `yaml:"submissions,omitempty,flow"`   //used in list_submissions
 	Submission     tasks.Submission `yaml:"submission,omitempty"`         //used in get_submission
+	Contests       [][2]string      `yaml:"contests,omitempty,flow"`      //used in list_contests
 }
 
 //Execute given command. Return response to the client
@@ -271,4 +273,20 @@ func (s *Server) checkRound(com *Command) (bool, string) {
 		return false, "Round has not yet started"
 	}
 	return true, ""
+}
+
+func (s *Server) listContests(com *Command) []byte {
+	conList := make([][2]string, 0, len(s.contests))
+	for id, con := range s.contests {
+		var temp [2]string
+		temp[0] = id
+		temp[1] = con.Name
+		conList = append(conList, temp)
+	}
+	msg := ReturnMessage{
+		Status:   "ok",
+		Contests: conList,
+	}
+	buff, _ := yaml.Marshal(msg)
+	return buff
 }
