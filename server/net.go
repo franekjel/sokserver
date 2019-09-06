@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bufio"
 	"encoding/binary"
 	"net"
 	"strconv"
@@ -17,16 +16,7 @@ type connectionData struct {
 
 //reads 4 bytes and convert it to uint
 func readUint(conn net.Conn) uint {
-	buff := make([]byte, 4)
-	c := bufio.NewReader(conn)
-	for i := 0; i < 4; i++ {
-		b, err := c.ReadByte()
-		buff[i] = b
-		if err != nil {
-			log.Warn("Cannot read message size: %s", err.Error())
-			return 0
-		}
-	}
+	buff := readNBytes(conn, 4)
 	return uint(binary.BigEndian.Uint32(buff))
 }
 

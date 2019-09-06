@@ -9,13 +9,16 @@ import (
 
 func TestServer(t *testing.T) {
 	//first we copy test environment to /tmp to don't break it if something go wrong
-	cmd := exec.Command("cp", "-r", "./testdata/", "/tmp/")
+	cmd := exec.Command("rm", "-r", "/tmp/testdata/")
+	cmd.Run()
+	cmd = exec.Command("cp", "-r", "./testdata/", "/tmp/")
 	cmd.Run()
 
 	go InitServer("/tmp/testdata/")
 
 	var conn net.Conn
-	for i := 0; i < 50; i++ { //Try connect to server. If you can't in 5s throw error
+
+	for i := 0; i < 30; i++ { //Try connect to server. If you can't in 3s throw error
 		var err error
 		conn, err = net.Dial("tcp", "127.0.0.1:19151") //It's easy to test sok on remote server - comment go InitServer() and set correct IP
 		if err == nil {
@@ -25,6 +28,7 @@ func TestServer(t *testing.T) {
 	}
 	if conn == nil {
 		t.Error("Cannot connect to server")
+		return
 	}
 	time.Sleep(time.Millisecond * 300)
 	t.Run("Create account", func(t *testing.T) {
