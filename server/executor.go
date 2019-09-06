@@ -70,6 +70,10 @@ func (s *Server) Execute(buff []byte) []byte {
 		return s.listSubmissions(&com)
 	case "get_submission":
 		return s.getSubmission(&com)
+	case "list_contests":
+		return s.listContests(&com)
+	case "join_contest":
+		return s.joinContest(&com)
 	}
 
 	return returnStatus("Bad command name")
@@ -289,4 +293,15 @@ func (s *Server) listContests(com *Command) []byte {
 	}
 	buff, _ := yaml.Marshal(msg)
 	return buff
+}
+
+func (s *Server) joinContest(com *Command) []byte {
+	if _, ok := s.contests[com.Contest]; !ok {
+		return returnStatus("Contest doesn't exist")
+	}
+	if s.contests[com.Contest].Key != com.Data {
+		return returnStatus("Wrong key")
+	}
+	s.users[com.Login].AddToGroup(com.Data)
+	return returnStatus("ok")
 }

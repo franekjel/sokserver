@@ -13,15 +13,12 @@ import (
 
 //User data
 type User struct {
-	Login string `yaml:"-"`
-
-	Name         string   `yaml:"name"`
-	Surname      string   `yaml:"surname"`
-	PasswordHash string   `yaml:"password"`
-	PasswordSalt string   `yaml:"salt"`
-	Groups       []string `yaml:"groups"`
-
-	fs *fs.Fs
+	Login        string          `yaml:"-"`
+	PasswordHash string          `yaml:"password"`
+	PasswordSalt string          `yaml:"salt"`
+	YamledGroups []string        `yaml:"groups"` //for keep in user file
+	Groups       map[string]bool `yaml:"-"`
+	fs           *fs.Fs
 }
 
 func (u *User) loadData() {
@@ -30,6 +27,10 @@ func (u *User) loadData() {
 	}
 	buff := u.fs.ReadFile(u.Login + ".yml")
 	yaml.Unmarshal(buff, u)
+	u.Groups = make(map[string]bool, len(u.YamledGroups))
+	for _, grp := range u.YamledGroups {
+		u.Groups[grp] = true
+	}
 }
 
 //SaveData save user config to file
@@ -44,7 +45,7 @@ func (u *User) SaveData() {
 
 //AddToGroup adds user to given group
 func (u *User) AddToGroup(group string) {
-	u.Groups = append(u.Groups, group)
+	u.Groups[group] = true
 	u.SaveData()
 }
 
@@ -70,10 +71,8 @@ func (u *User) VerifyPassword(password []byte) bool {
 
 //CheckGroup checks if user is in given group
 func (u *User) CheckGroup(group *string) bool {
-	for _, s := range u.Groups {
-		if s == *group {
-			return true
-		}
+	if _, ok := u.Groups[*group]; ok {
+		return true
 	}
 	return false
 }
