@@ -302,6 +302,6 @@ func (s *Server) joinContest(com *Command) []byte {
 	if s.contests[com.Contest].Key != com.Data {
 		return returnStatus("Wrong key")
 	}
-	s.users[com.Login].AddToGroup(com.Data)
+	s.users[com.Login].AddToGroup(com.Contest)
 	return returnStatus("ok")
 }

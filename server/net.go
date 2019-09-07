@@ -32,7 +32,6 @@ func readNBytes(conn net.Conn, n uint) []byte {
 			return nil
 		}
 	}
-	log.Info("%s received %s", conn.LocalAddr().String(), buff)
 	return buff
 }
 

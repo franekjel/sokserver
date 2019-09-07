@@ -48,6 +48,7 @@ Commands:
 	status: ok
 	contests: [[easy, "Contest for beginners"], [med, "Contest for more advanced"]]
  	``` 
+ - join_contest: Join specified contest. Requires contest and data field. Data field should contains contest access key.
  - submit: Submits solution. Requires contest, round, task and data. Data field contains code. Example:
 	```
 	login: franekjel

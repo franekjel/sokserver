@@ -28,7 +28,7 @@ func TestVerifyPassword(t *testing.T) {
 
 func TestCheckGroup(t *testing.T) {
 	grp := []string{"gr1", "gr2", "gr3"}
-	u := User{Groups: grp}
+	u := User{Groups: map[string]bool{"gr1": true, "gr2": true, "gr3": true}}
 	if !u.CheckGroup(&grp[1]) {
 		t.Error(u.Groups, grp[1])
 	}

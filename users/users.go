@@ -35,6 +35,11 @@ func (u *User) loadData() {
 
 //SaveData save user config to file
 func (u *User) SaveData() {
+	groups := make([]string, 0, len(u.Groups))
+	for i := range u.Groups {
+		groups = append(groups, i)
+	}
+	u.YamledGroups = groups
 	buff, err := yaml.Marshal(u)
 	if err == nil {
 		u.fs.WriteFile(u.Login+".yml", string(buff))
@@ -55,14 +60,14 @@ func genHash(password []byte) (string, string) {
 	if err != nil {
 		return "", ""
 	}
-	passwordHash := argon2.Key([]byte(password), salt, 3, 32*1024, 1, 32)
-	return hex.EncodeToString(salt), hex.EncodeToString(passwordHash)
+	passwordHash := argon2.Key(password, salt, 3, 32*1024, 1, 32)
+	return hex.EncodeToString(passwordHash), hex.EncodeToString(salt)
 }
 
 //VerifyPassword perform password verification based on stored hash and salt
 func (u *User) VerifyPassword(password []byte) bool {
 	salt, _ := hex.DecodeString(u.PasswordSalt)
-	passwordHash := argon2.Key([]byte(password), salt, 3, 32*1024, 1, 32)
+	passwordHash := argon2.Key(password, salt, 3, 32*1024, 1, 32)
 	if hex.EncodeToString(passwordHash) == u.PasswordHash {
 		return true
 	}
@@ -81,7 +86,6 @@ func (u *User) CheckGroup(group *string) bool {
 func LoadUser(path *fs.Fs, login string) *User {
 	user := User{Login: login, fs: path}
 	user.loadData()
-	log.Debug("name: %s, surname: %s, groups: %+q", user.Name, user.Surname, user.Groups)
 	return &user
 }
 
@@ -91,6 +95,7 @@ func AddUser(usersPath *fs.Fs, login *string, password []byte) *User {
 	user.fs = usersPath
 	user.Login = *login
 	user.PasswordHash, user.PasswordSalt = genHash(password)
+	user.Groups = map[string]bool{}
 	for i := range password { //erase password for better security
 		(password)[i] = 0
 	}

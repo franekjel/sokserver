@@ -93,7 +93,7 @@ func prepareTestEnvironment() *Server {
 	s.fs.CreateDirectory("queue")
 	s.users = make(map[string]*users.User)
 	s.users["testLogin"] = &users.User{ //adding user
-		Groups: []string{"con1"},
+		Groups: map[string]bool{"con1": true},
 	}
 	s.contests = make(map[string]*contests.Contest)
 	s.contests["con1"] = &contests.Contest{ //adding contest
