@@ -10,6 +10,15 @@ import (
 	"time"
 )
 
+func communicate(conn net.Conn, buff []byte) []byte {
+	n := len(buff)
+	conn.SetDeadline(time.Now().Add(3 * time.Second))
+	sendUint(conn, uint32(n))
+	sendSlice(conn, buff)
+	m := readUint(conn)
+	return readNBytes(conn, m)
+}
+
 func connect() net.Conn {
 	var conn net.Conn
 	for i := 0; i < 30; i++ { //Try connect to server. If you can't in 3s throw error
@@ -30,15 +39,10 @@ func createAccount(t *testing.T) {
 		t.Error("Cannot connect to server")
 		return
 	}
-	buff := []byte("login: Amandil\npassword: P@ssword\ncommand: create_account")
-	n := len(buff)
-	conn.SetDeadline(time.Now().Add(3 * time.Second))
-	sendUint(conn, uint32(n))
-	sendSlice(conn, buff)
-	m := readUint(conn)
-	buff = readNBytes(conn, m)
+	buff := communicate(conn, []byte("login: Amandil\npassword: P@ssword\ncommand: create_account"))
+
 	if string(buff) != "status: ok\n" {
-		t.Error("Bad return message: ", string(buff), "lenght:", len(buff), " - ", m)
+		t.Error("Bad return message: ", string(buff))
 	}
 
 	//check if user file was created
@@ -55,15 +59,9 @@ func joinContest(t *testing.T) {
 		t.Error("Cannot connect to server")
 		return
 	}
-	buff := []byte("login: Amandil\npassword: P@ssword\ncommand: join_contest\ncontest: con1\ndata: secret_key")
-	n := len(buff)
-	conn.SetDeadline(time.Now().Add(3 * time.Second))
-	sendUint(conn, uint32(n))
-	sendSlice(conn, buff)
-	m := readUint(conn)
-	buff = readNBytes(conn, m)
+	buff := communicate(conn, []byte("login: Amandil\npassword: P@ssword\ncommand: join_contest\ncontest: con1\ndata: secret_key"))
 	if string(buff) != "status: ok\n" {
-		t.Error("Bad return message: ", string(buff), "lenght:", len(buff), " - ", m)
+		t.Error("Bad return message: ", string(buff))
 		return
 	}
 	//check if user was added to group con1
